@@ -1,7 +1,27 @@
-// Client-side caller for the /api/ai serverless function (Gemini).
+// Client-side caller for the /api serverless functions (Gemini).
 // Returns null on any failure so callers can fall back to the deterministic mock.
 
 import type { ProductContext, AiSuggestions, SyntheticProfile, GeneratedProfile } from "../state/types";
+
+// POST JSON with a hard timeout so a slow/hung network never spins forever.
+async function postJson(url: string, body: unknown, ms = 30000): Promise<any | null> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 import {
   GENERIC_DECISION_BEHAVIORS,
   GENERIC_INFORMATION_NEEDS,
@@ -34,19 +54,9 @@ export interface AiResearchResponse {
 }
 
 export async function callAi(ctx: ProductContext): Promise<AiResearchResponse | null> {
-  try {
-    const res = await fetch("/api/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...ctx, commonPools: COMMON_POOLS }),
-    });
-    if (!res.ok) return null; // 503 (no key), 502 (gemini error), etc. → fall back to mock
-    const data = (await res.json()) as AiResearchResponse;
-    if (!data || !data.suggestions || !Array.isArray(data.roles)) return null;
-    return data;
-  } catch {
-    return null;
-  }
+  const data = (await postJson("/api/ai", { ...ctx, commonPools: COMMON_POOLS })) as AiResearchResponse | null;
+  if (!data || !data.suggestions || !Array.isArray(data.roles)) return null;
+  return data;
 }
 
 export type RefineTarget =
@@ -70,34 +80,14 @@ export async function refineField(
   profile: SyntheticProfile,
   target: RefineTarget
 ): Promise<RefineResponse | null> {
-  try {
-    const res = await fetch("/api/refine", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile, target }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as RefineResponse;
-    if (!data || (!data.motivation && !Array.isArray(data.suggestions))) return null;
-    return data;
-  } catch {
-    return null;
-  }
+  const data = (await postJson("/api/refine", { profile, target })) as RefineResponse | null;
+  if (!data || (!data.motivation && !Array.isArray(data.suggestions))) return null;
+  return data;
 }
 
 /** "Complete with AI": returns the rich narrative, or null if unavailable. */
 export async function completeProfile(profile: SyntheticProfile): Promise<GeneratedProfile | null> {
-  try {
-    const res = await fetch("/api/complete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as GeneratedProfile;
-    if (!data || !data.decisionStyle) return null;
-    return data;
-  } catch {
-    return null;
-  }
+  const data = (await postJson("/api/complete", profile)) as GeneratedProfile | null;
+  if (!data || !data.decisionStyle) return null;
+  return data;
 }
