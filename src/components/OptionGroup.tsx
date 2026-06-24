@@ -24,6 +24,7 @@ export default function OptionGroup({
   onRemoveCustom,
   onRegenerate,
   onSelectForMe,
+  onRandomize,
   regenerating = false,
   type = "checkbox",
   customPlaceholder = "Add your own…",
@@ -38,6 +39,7 @@ export default function OptionGroup({
   onRemoveCustom: (value: string) => void;
   onRegenerate?: () => void;
   onSelectForMe?: () => void;
+  onRandomize?: () => void;
   regenerating?: boolean;
   type?: "checkbox" | "radio";
   customPlaceholder?: string;
@@ -86,7 +88,14 @@ export default function OptionGroup({
       </section>
 
       <section>
-        <GroupHeader title="Common" />
+        <GroupHeader
+          title="Common"
+          action={
+            onRandomize && (
+              <AiFillButton variant="random" label="Randomize" onClick={onRandomize} />
+            )
+          }
+        />
         <div className="space-y-2">
           {commonOptions.map((o) => (
             <SelectableOption

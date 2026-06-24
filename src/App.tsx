@@ -5,6 +5,7 @@ import { WizardNavContext } from "./state/nav";
 import Stepper from "./components/Stepper";
 import StepShell from "./components/StepShell";
 import LiveProfilePreview from "./components/LiveProfilePreview";
+import { profileCompleteness } from "./lib/validation";
 import { STEPS } from "./steps";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -57,6 +58,7 @@ export default function App() {
   };
 
   const current = STEPS[step];
+  const completeness = profileCompleteness(profile);
 
   return (
     <WizardNavContext.Provider value={go}>
@@ -68,19 +70,37 @@ export default function App() {
                 style={{ background: "var(--color-accent)", color: "#0b0d10" }}>S</span>
           <h1 className="text-sm font-semibold text-[var(--color-ink)]">Synthetic User Builder</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            if (confirm("Start a new blank profile? Your current draft will be cleared.")) {
-              localStorage.removeItem(DRAFT_KEY);
-              dispatch({ type: "reset" });
-              go(0);
-            }
-          }}
-          className="text-[12px] font-medium text-[var(--color-ink-faint)] hover:text-[var(--color-ink-soft)]"
-        >
-          New profile
-        </button>
+        <div className="flex items-center gap-4">
+          {profile.profileName && (
+            <div className="flex items-center gap-2 text-right">
+              <div className="leading-tight">
+                <div className="text-[13px] font-medium text-[var(--color-ink)]">{profile.profileName}</div>
+                <div className="text-[10px] uppercase tracking-wide" style={{ color: completeness.color }}>
+                  Draft · {completeness.label}
+                </div>
+              </div>
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: completeness.color }}
+                title={`${completeness.filled}/${completeness.total} sections`}
+              />
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("Start a new blank profile? Your current draft will be cleared.")) {
+                localStorage.removeItem(DRAFT_KEY);
+                dispatch({ type: "reset" });
+                go(0);
+              }
+            }}
+            className="rounded-md border px-3 py-1.5 text-[12px] font-medium text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink-soft)]"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            New profile
+          </button>
+        </div>
       </header>
 
       {/* Body: 3 panes */}

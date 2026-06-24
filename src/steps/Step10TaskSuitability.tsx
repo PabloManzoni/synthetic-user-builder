@@ -45,6 +45,14 @@ export default function Step10TaskSuitability() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold" style={{ color: "var(--color-ok)" }}>Suitable task types</h3>
           <div className="flex items-center gap-3">
+          <AiFillButton
+            variant="random"
+            label="Randomize"
+            onClick={() => {
+              const pool = [...GENERIC_SUITABLE_TASKS].sort(() => Math.random() - 0.5).slice(0, 3 + Math.floor(Math.random() * 2));
+              dispatch({ type: "patchTaskSuitability", patch: { suitable: [...pool, ...t.customSuitable.filter((c) => t.suitable.includes(c))] } });
+            }}
+          />
           {aiSuitable.length > 0 && (
             <button
               type="button"

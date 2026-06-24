@@ -5,6 +5,54 @@ import type {
   Verdict,
 } from "../state/types";
 
+// ---- Completeness of the human input (separate from quality validation) ----
+
+export interface Completeness {
+  filled: number;
+  total: number;
+  pct: number;
+  label: string;
+  color: string;
+}
+
+/** How much of the profile the user has filled in, as a friendly scale. */
+export function profileCompleteness(p: SyntheticProfile): Completeness {
+  const c = p.productContext;
+  const has = (s: { selected: string[] }) => s.selected.length > 0;
+  const checks = [
+    c.researched || c.researchMode === "skip" || !!(c.clientName || c.manualDescription),
+    p.role.selected.length > 0,
+    !!p.expertise.domainExpertise,
+    has(p.decisionBehavior),
+    has(p.informationNeeds),
+    has(p.constraints),
+    has(p.forbiddenAssumptions),
+    has(p.frictionTriggers),
+    has(p.emotionalBehavior),
+    has(p.abandonmentRules),
+    p.taskSuitability.suitable.length + p.taskSuitability.customSuitable.length > 0,
+  ];
+  const filled = checks.filter(Boolean).length;
+  const total = checks.length;
+  const pct = Math.round((filled / total) * 100);
+  let label = "Empty";
+  let color = "var(--color-ink-faint)";
+  if (pct >= 100) {
+    label = "Complete";
+    color = "var(--color-ok)";
+  } else if (pct >= 75) {
+    label = "Almost there";
+    color = "var(--color-ok)";
+  } else if (pct >= 45) {
+    label = "Getting there";
+    color = "var(--color-info)";
+  } else if (pct > 0) {
+    label = "Just started";
+    color = "var(--color-risk)";
+  }
+  return { filled, total, pct, label, color };
+}
+
 // ---- Reusable warning detectors (used live across steps + preview) ----
 
 const TASK_PHRASES = [

@@ -85,6 +85,15 @@ export default function OptionStep({
     setSelected([...chosen, ...customStillSelected]);
   };
 
+  // Pick a random handful from the available pool (works even with no AI context).
+  const randomize = () => {
+    const pool = Array.from(new Set([...aiOptions, ...common]));
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const count = Math.min(pool.length, 3 + Math.floor(Math.random() * 3)); // 3–5
+    const customStillSelected = custom.filter((c) => selected.includes(c));
+    setSelected([...shuffled.slice(0, count), ...customStillSelected]);
+  };
+
   return (
     <>
       {warnIfEmpty && total === 0 && <WarningBanner tone="danger">{warnIfEmpty}</WarningBanner>}
@@ -99,6 +108,7 @@ export default function OptionStep({
         onAddCustom={addCustom}
         onRemoveCustom={removeCustom}
         onSelectForMe={aiOptions.length > 0 ? selectForMe : undefined}
+        onRandomize={common.length > 0 ? randomize : undefined}
         onRegenerate={RECO_KEY[stepKey] ? regenerate : undefined}
         regenerating={regenerating}
         customPlaceholder={customPlaceholder}

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useProfile } from "../state/profileStore";
-import { validateProfile, detectTaskLanguage } from "../lib/validation";
+import { profileCompleteness, detectTaskLanguage } from "../lib/validation";
 import { asciiFace } from "../lib/asciiFace";
 
 const dimStyle = (dim: boolean) => ({
@@ -63,14 +63,9 @@ function Chips({
   );
 }
 
-const verdictColor = (v: string) =>
-  v === "strong" ? "var(--color-ok)" : v === "invalid" ? "var(--color-action)" : "var(--color-risk)";
-const verdictLabel = (v: string) =>
-  v === "strong" ? "Strong" : v === "invalid" ? "Invalid" : "Needs refinement";
-
 export default function LiveProfilePreview({ activeStep }: { activeStep: number }) {
   const { profile: p } = useProfile();
-  const v = validateProfile(p);
+  const cp = profileCompleteness(p);
   const all = (s: { selected: string[] }) => Array.from(new Set(s.selected));
 
   // Sections light up for the step they belong to; on review/export (>=10) nothing dims.
@@ -86,10 +81,11 @@ export default function LiveProfilePreview({ activeStep }: { activeStep: number 
       <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: "var(--color-border)" }}>
         <h3 className="text-sm font-semibold text-[var(--color-ink)]">Live profile</h3>
         <span
-          className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-          style={{ background: "var(--color-surface-2)", color: verdictColor(v.overall) }}
+          className="flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+          style={{ background: "var(--color-surface-2)", color: cp.color }}
+          title={`${cp.filled} of ${cp.total} sections filled`}
         >
-          {verdictLabel(v.overall)}
+          {cp.label} · {cp.pct}%
         </span>
       </div>
 

@@ -100,7 +100,19 @@ export default function Step2Role() {
       </section>
 
       <section>
-        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Common roles</h4>
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Common roles</h4>
+          <AiFillButton
+            variant="random"
+            label="Randomize"
+            onClick={() => {
+              const pool = [...GENERIC_ROLES].sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 2));
+              pool.forEach((name) =>
+                !isOn(name) && toggleRole(name, `Generic ${name.toLowerCase()} — calibrated through the next steps.`)
+              );
+            }}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {GENERIC_ROLES.map((name) => {
             const active = isOn(name);
