@@ -10,7 +10,8 @@ export interface AiResearchResponse {
   primaryUsers: string;
   riskAreas: string;
   roles: AiSuggestions["roles"];
-  suggestions: Omit<AiSuggestions, "roles">;
+  suggestions: Omit<AiSuggestions, "roles" | "recommended">;
+  recommended?: AiSuggestions["recommended"];
 }
 
 export async function callAi(ctx: ProductContext): Promise<AiResearchResponse | null> {

@@ -48,9 +48,21 @@ Return JSON with EXACTLY this shape:
     "emotionalBehaviors": ["..."],
     "abandonmentRules": ["..."],
     "suitableTasks": ["..."]
+  },
+  "recommended": {
+    "decisionBehaviors": ["subset of the above"],
+    "informationNeeds": ["subset"],
+    "forbiddenAssumptions": ["subset"],
+    "frictionTriggers": ["subset"],
+    "emotionalBehaviors": ["subset"],
+    "abandonmentRules": ["subset"],
+    "suitableTasks": ["subset"]
   }
 }
-Provide 3-6 items per suggestion list and 3-5 roles. If context is weak, lower the confidence and keep items generic but still behavioral.`;
+Provide 3-6 items per suggestion list and 3-5 roles. "recommended" must be a CURATED SUBSET
+of each corresponding suggestions list (each item must appear verbatim in suggestions) — pick only
+the 2-4 items that together make a STRONG but NOT over-guided profile for this role, leaving the
+rest as optional. If context is weak, lower the confidence and keep items generic but still behavioral.`;
 }
 
 export default async function handler(req: any, res: any) {

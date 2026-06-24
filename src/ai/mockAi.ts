@@ -160,7 +160,7 @@ export async function research(c: ProductContext): Promise<ResearchResult> {
       description: ai.description,
       primaryUsers: ai.primaryUsers,
       riskAreas: ai.riskAreas,
-      suggestions: { roles: ai.roles, ...ai.suggestions },
+      suggestions: { roles: ai.roles, ...ai.suggestions, recommended: ai.recommended },
       source: "ai",
     };
   }
@@ -203,6 +203,31 @@ export const suggestAbandonmentRules = (c: ProductContext): string[] =>
 export const suggestSuitableTasks = (c: ProductContext): string[] =>
   c.aiSuggestions?.suitableTasks ??
   (matchBank(c)?.suitableTasks ?? (c.researched ? inferred(GENERIC_SUITABLE_TASKS) : []));
+
+// ---- "Select for me" — a curated SUBSET, not everything ----
+// Prefers the AI's recommended subset; otherwise picks a sensible ~60% (min 2),
+// so the button evaluates rather than blindly checking every AI option.
+
+type RecoKey =
+  | "decisionBehaviors"
+  | "informationNeeds"
+  | "forbiddenAssumptions"
+  | "frictionTriggers"
+  | "emotionalBehaviors"
+  | "abandonmentRules"
+  | "suitableTasks";
+
+function sensibleSubset(all: string[]): string[] {
+  if (all.length <= 3) return all;
+  return all.slice(0, Math.max(2, Math.round(all.length * 0.6)));
+}
+
+/** The subset "Select for me" should check for a given category. */
+export function recommendedFor(c: ProductContext, key: RecoKey, allShown: string[]): string[] {
+  const reco = c.aiSuggestions?.recommended?.[key];
+  if (reco && reco.length) return reco.filter((x) => allShown.includes(x));
+  return sensibleSubset(allShown);
+}
 
 // ---- Fill-with-AI generators (deterministic mock; see TODO(real-ai)) ----
 

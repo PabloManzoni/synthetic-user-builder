@@ -3,7 +3,18 @@ import { useProfile, type OptionKey } from "../state/profileStore";
 import { useOptionStep } from "../lib/useOptionStep";
 import OptionGroup from "../components/OptionGroup";
 import WarningBanner from "../components/WarningBanner";
+import { recommendedFor } from "../ai/mockAi";
 import type { ProductContext } from "../state/types";
+
+// Map the step's slice key to the AI suggestion category for "Select for me".
+const RECO_KEY: Record<string, Parameters<typeof recommendedFor>[1] | undefined> = {
+  decisionBehavior: "decisionBehaviors",
+  informationNeeds: "informationNeeds",
+  forbiddenAssumptions: "forbiddenAssumptions",
+  frictionTriggers: "frictionTriggers",
+  emotionalBehavior: "emotionalBehaviors",
+  abandonmentRules: "abandonmentRules",
+};
 
 export default function OptionStep({
   stepKey,
@@ -46,11 +57,13 @@ export default function OptionStep({
 
   const total = effective.length;
 
-  // AI picks the recommended set — replaces the selection with exactly the AI options,
-  // keeping any custom values the user added that aren't covered by the recommendation.
+  // AI picks a curated SUBSET (not every option), replacing the selection but
+  // keeping custom values the user added that aren't part of the recommendation.
   const selectForMe = () => {
-    const customStillSelected = custom.filter((c) => selected.includes(c) && !aiOptions.includes(c));
-    setSelected([...aiOptions, ...customStillSelected]);
+    const recoKey = RECO_KEY[stepKey];
+    const chosen = recoKey ? recommendedFor(profile.productContext, recoKey, aiOptions) : aiOptions;
+    const customStillSelected = custom.filter((c) => selected.includes(c) && !chosen.includes(c));
+    setSelected([...chosen, ...customStillSelected]);
   };
 
   return (

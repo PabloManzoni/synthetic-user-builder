@@ -25,6 +25,16 @@ export interface AiSuggestions {
   emotionalBehaviors: string[];
   abandonmentRules: string[];
   suitableTasks: string[];
+  /** A curated subset of each list — what "Select for me" picks (not all). */
+  recommended?: {
+    decisionBehaviors: string[];
+    informationNeeds: string[];
+    forbiddenAssumptions: string[];
+    frictionTriggers: string[];
+    emotionalBehaviors: string[];
+    abandonmentRules: string[];
+    suitableTasks: string[];
+  };
 }
 
 export interface ProductContext {

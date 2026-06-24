@@ -1,5 +1,5 @@
 import { useProfile } from "../state/profileStore";
-import { suggestSuitableTasks } from "../ai/mockAi";
+import { suggestSuitableTasks, recommendedFor } from "../ai/mockAi";
 import { GENERIC_SUITABLE_TASKS, GENERIC_UNSUITABLE_TASKS } from "../ai/genericOptions";
 import SelectableOption from "../components/SelectableOption";
 import CustomOptionInput from "../components/CustomOptionInput";
@@ -31,12 +31,13 @@ export default function Step10TaskSuitability() {
             <AiFillButton
               variant="ai"
               label="Select for me"
-              onClick={() =>
+              onClick={() => {
+                const chosen = recommendedFor(profile.productContext, "suitableTasks", aiSuitable);
                 dispatch({
                   type: "patchTaskSuitability",
-                  patch: { suitable: [...aiSuitable, ...t.customSuitable.filter((c) => t.suitable.includes(c))] },
-                })
-              }
+                  patch: { suitable: [...chosen, ...t.customSuitable.filter((c) => t.suitable.includes(c))] },
+                });
+              }}
             />
           )}
         </div>
