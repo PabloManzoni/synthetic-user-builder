@@ -234,7 +234,7 @@ export const STEPS: StepDef[] = [
   {
     title: "Product context",
     helper:
-      "Tell us about the product so we can suggest roles and problems that fit. Search for it, describe it, or skip.",
+      "Which product will this synthetic user use? Tell us about it so we can predict the right roles and problems. Search for it, describe it, or skip.",
     Body: Step1ProductContext,
   },
   {

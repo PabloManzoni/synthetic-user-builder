@@ -101,7 +101,7 @@ export default function Step1ProductContext() {
 
       <Labeled label="Client">
         <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.clientName}
-               onChange={(e) => patch({ clientName: e.target.value })} placeholder="e.g. Netflix, Notion, your company…" />
+               onChange={(e) => patch({ clientName: e.target.value })} placeholder="The company behind the product — e.g. Netflix, Spotify, Airbnb" />
       </Labeled>
 
       <div>
@@ -113,8 +113,8 @@ export default function Step1ProductContext() {
         <p className="mt-1.5 flex gap-1.5 text-[12px] leading-snug text-[var(--color-ink-faint)]">
           <span aria-hidden>💡</span>
           <span>
-            Paste the product's website, links, or a good description. The more you give, the better the AI
-            understands the <em>real</em> app instead of guessing.
+            This is the app your synthetic user works in. Paste its website, links or a good description — the
+            more you give, the better we predict its <em>real</em> roles instead of guessing.
           </span>
         </p>
       </div>
