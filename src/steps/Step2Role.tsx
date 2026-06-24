@@ -102,55 +102,6 @@ export default function Step2Role() {
         )}
       </section>
 
-      <section className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
-        <div className="mb-2 flex items-center justify-between">
-          <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-border-strong)" }} />
-            Common roles
-          </h4>
-          <AiFillButton
-            variant="random"
-            label="Randomize"
-            onClick={() => {
-              const pool = [...GENERIC_ROLES].sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 2));
-              pool.forEach((name) =>
-                !isOn(name) && toggleRole(name, `A general ${name.toLowerCase()} — you'll shape this in the next steps.`)
-              );
-            }}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {GENERIC_ROLES.map((name) => {
-            const active = isOn(name);
-            return (
-              <button
-                key={name}
-                type="button"
-                onClick={() => toggleRole(name, `A general ${name.toLowerCase()} — you'll shape this in the next steps.`)}
-                className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] transition-colors"
-                style={{
-                  borderColor: active ? "var(--color-accent)" : "var(--color-border)",
-                  background: active ? "var(--color-accent-soft)" : "var(--color-surface-2)",
-                  color: "var(--color-ink)",
-                }}
-              >
-                <span
-                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px]"
-                  style={{
-                    borderColor: active ? "var(--color-accent)" : "var(--color-border-strong)",
-                    background: active ? "var(--color-accent)" : "transparent",
-                    color: "#0b0d10",
-                  }}
-                >
-                  {active ? "✓" : ""}
-                </span>
-                {name}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
       <section className="space-y-2 border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
         <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-border-strong)" }} />
@@ -205,6 +156,55 @@ export default function Step2Role() {
         >
           Add role
         </button>
+      </section>
+
+      <section className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-border-strong)" }} />
+            Common roles
+          </h4>
+          <AiFillButton
+            variant="random"
+            label="Randomize"
+            onClick={() => {
+              const pool = [...GENERIC_ROLES].sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 2));
+              pool.forEach((name) =>
+                !isOn(name) && toggleRole(name, `A general ${name.toLowerCase()} — you'll shape this in the next steps.`)
+              );
+            }}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {GENERIC_ROLES.map((name) => {
+            const active = isOn(name);
+            return (
+              <button
+                key={name}
+                type="button"
+                onClick={() => toggleRole(name, `A general ${name.toLowerCase()} — you'll shape this in the next steps.`)}
+                className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] transition-colors"
+                style={{
+                  borderColor: active ? "var(--color-accent)" : "var(--color-border)",
+                  background: active ? "var(--color-accent-soft)" : "var(--color-surface-2)",
+                  color: "var(--color-ink)",
+                }}
+              >
+                <span
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px]"
+                  style={{
+                    borderColor: active ? "var(--color-accent)" : "var(--color-border-strong)",
+                    background: active ? "var(--color-accent)" : "transparent",
+                    color: "#0b0d10",
+                  }}
+                >
+                  {active ? "✓" : ""}
+                </span>
+                {name}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       {r.selected.length > 0 && (

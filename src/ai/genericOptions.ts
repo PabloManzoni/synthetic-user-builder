@@ -3,17 +3,13 @@
 // even with no AI research and no SmartSense context.
 
 export const GENERIC_ROLES = [
-  "Frontline Operator",
-  "Operations Coordinator",
-  "Team Supervisor",
-  "Compliance Reviewer",
-  "Support Agent",
+  "End user",
+  "Power user",
+  "Admin",
   "Manager",
-  "Analyst",
-  "Administrator",
-  "External Client User",
-  "Occasional User",
-  "Power User",
+  "Reviewer",
+  "External user",
+  "New user",
 ];
 
 export const DOMAIN_EXPERTISE_LEVELS = ["Low", "Medium", "High", "Expert"];
