@@ -53,6 +53,9 @@ export default function ValidationPanel() {
     const p = profile;
     const ctx = p.productContext;
     const ai = ctx.aiSuggestions;
+    // Choose items that satisfy the validator's minimum: start from AI's recommended
+    // subset (most relevant), then top up from the pool — AI suggestions first, then
+    // common — until we hit `min`. The recommended subset alone is often too small.
     const pick = (
       cat: Parameters<typeof recommendedFor>[1],
       aiArr: string[],
@@ -60,11 +63,14 @@ export default function ValidationPanel() {
       min: number,
       max: number
     ): string[] => {
-      if (aiArr.length) {
-        const reco = recommendedFor(ctx, cat, aiArr, common);
-        if (reco.length) return reco;
+      const chosen = aiArr.length ? [...recommendedFor(ctx, cat, aiArr, common)] : randomSubset(common, min, max);
+      if (chosen.length < min) {
+        for (const item of [...aiArr, ...common]) {
+          if (chosen.length >= min) break;
+          if (!chosen.includes(item)) chosen.push(item);
+        }
       }
-      return randomSubset(common, min, max);
+      return chosen;
     };
 
     // Role
@@ -175,7 +181,7 @@ export default function ValidationPanel() {
           style={{ borderColor: "var(--color-accent)", background: "var(--color-surface-2)" }}
         >
           <div>
-            <div className="text-[13px] font-medium text-[var(--color-ink)]">Fix everything for me</div>
+            <div className="text-[13px] font-medium text-[var(--color-ink)]">Fill the blanks with AI</div>
             <div className="text-[11px] text-[var(--color-ink-faint)]">
               Fills every empty or weak section with AI suggestions (and sensible random data). Won't touch what you already set.
             </div>
@@ -186,7 +192,7 @@ export default function ValidationPanel() {
             className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
             style={{ background: "var(--color-accent)", color: "#0b0d10" }}
           >
-            ✨ Fix everything
+            ✨ Fill the blanks
           </button>
         </div>
       )}

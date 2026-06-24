@@ -173,10 +173,25 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     p.abandonmentRules.selected.length,
     p.taskSuitability.suitable.length,
   ].filter(Boolean).length;
+  // Point "how complete" at the first step that still has an empty core section,
+  // so clicking it lands where there's actually something to fill.
+  const firstIncompleteStep = !roleSelected
+    ? 1
+    : !p.expertise.domainExpertise
+      ? 2
+      : behaviorCount === 0 && p.emotionalBehavior.selected.length === 0
+        ? 3
+        : infoCount === 0 && constraintCount === 0 && forbiddenCount === 0
+          ? 4
+          : frictionCount === 0 && p.abandonmentRules.selected.length === 0
+            ? 5
+            : p.taskSuitability.suitable.length === 0
+              ? 6
+              : 0;
   dims.push({
     key: "completeness",
     label: "How complete it is",
-    step: 1,
+    step: firstIncompleteStep,
     verdict: filledSlices >= 9 ? "strong" : "incomplete",
     explanation:
       filledSlices >= 9
