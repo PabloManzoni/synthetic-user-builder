@@ -12,13 +12,14 @@
 async function geminiJSON(
   prompt: string,
   temperature = 0.7
-): Promise<{ ok: true; data: any } | { ok: false; status: number }> {
+): Promise<{ ok: true; data: any } | { ok: false; status: number; detail?: string }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { ok: false, status: 503 };
   const primary = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const models = Array.from(new Set([primary, "gemini-2.0-flash"]));
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   let lastStatus = 503;
+  let lastDetail = "";
   for (const model of models) {
     for (let a = 0; a < 2; a++) {
       let res: Response;
@@ -50,6 +51,7 @@ async function geminiJSON(
         }
       }
       lastStatus = res.status;
+      try { lastDetail = (await res.text()).slice(0, 600); } catch {}
       if (res.status === 503) {
         await sleep(500 * (a + 1));
         continue;
@@ -57,7 +59,7 @@ async function geminiJSON(
       break;
     }
   }
-  return { ok: false, status: lastStatus };
+  return { ok: false, status: lastStatus, detail: lastDetail };
 }
 
 const RULES = `Rules: describe BEHAVIOR and LIMITS, never task/navigation steps (no "click", "open", "go to", "find X").
@@ -130,7 +132,7 @@ export default async function handler(req: any, res: any) {
     }
     const r = await geminiJSON(buildPrompt(profile || {}, target), 0.7);
     if (!r.ok) {
-      res.status(502).json({ error: "gemini_error", status: r.status });
+      res.status(502).json({ error: "gemini_error", status: r.status, detail: (r as any).detail });
       return;
     }
     res.status(200).json(r.data);
