@@ -62,10 +62,19 @@ async function geminiJSON(
   return { ok: false, status: lastStatus, detail: lastDetail };
 }
 
-const SYSTEM = `You help UX teams define REUSABLE SYNTHETIC USER PROFILES — constrained decision agents, not personas.
+const SYSTEM = `You help UX teams define REUSABLE SYNTHETIC USER PROFILES for a SPECIFIC product.
 A synthetic user defines HOW someone thinks, decides, hesitates, trusts, doubts, assumes and gives up.
 
-Hard rules for everything you produce:
+ROLES — most important: name the REAL kinds of people who actually use THIS product, in the product's
+own vocabulary. For a CrossFit gym app that's e.g. "Professional athlete", "Amateur member", "Coach",
+"Gym owner", "Front-desk staff". For a bank app: "Everyday account holder", "Small-business owner",
+"Fraud-wary saver". NEVER use abstract archetypes like "Status Monitor", "Action Taker" or "Data Reviewer".
+Each role = a real audience segment, with a 'description' of how that person behaves and decides.
+
+Tailor EVERYTHING (behaviors, information needs, friction, etc.) to this exact product and its real users
+and domain — be concrete and specific to the vertical, not generic.
+
+Hard rules:
 - NEVER include task objectives, navigation, or screen-by-screen steps (no "click", "open", "go to", "find X").
 - Describe BEHAVIOR and CONSTRAINTS, not how to use a specific product flow.
 - Keep each item short (a few words to one sentence). No numbering.
@@ -98,7 +107,7 @@ Return JSON with EXACTLY this shape:
   "primaryUsers": "short comma-separated list of likely user families",
   "riskAreas": "short comma-separated list of what goes wrong if the UI is misread",
   "roles": [
-    { "name": "...", "description": "...", "goodFor": "...", "notFor": "...", "confidence": "low|medium|high" }
+    { "name": "a real user type of THIS product, in its own words (e.g. 'Amateur member', 'Coach')", "description": "who they are + how they decide/behave", "goodFor": "...", "notFor": "...", "confidence": "low|medium|high" }
   ],
   "suggestions": {
     "decisionBehaviors": ["..."],
