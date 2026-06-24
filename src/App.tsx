@@ -139,6 +139,9 @@ export default function App() {
 
   const current = STEPS[step];
   const completeness = profileCompleteness(profile);
+  // On the Export step, once a synthetic user is generated, "New profile" becomes the
+  // single prominent CTA and the footer nav steps out of the way.
+  const finished = step === LAST && !!profile.generated;
 
   return (
     <WizardNavContext.Provider value={go}>
@@ -191,8 +194,12 @@ export default function App() {
           <button
             type="button"
             onClick={() => setConfirmingNew(true)}
-            className="rounded-md border px-3 py-1.5 text-[12px] font-medium text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink-soft)]"
-            style={{ borderColor: "var(--color-border)" }}
+            className={
+              finished
+                ? "rounded-md px-4 py-1.5 text-[13px] font-semibold transition-colors"
+                : "rounded-md border px-3 py-1.5 text-[12px] font-medium text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink-soft)]"
+            }
+            style={finished ? { background: "var(--color-accent)", color: "#0b0d10" } : { borderColor: "var(--color-border)" }}
           >
             New profile
           </button>
@@ -252,7 +259,8 @@ export default function App() {
         )}
       </div>
 
-      {/* Bottom bar */}
+      {/* Bottom bar — hidden once the user has generated on the final step */}
+      {!finished && (
       <footer className="flex items-center justify-between gap-3 border-t px-6 py-3" style={{ borderColor: "var(--color-border)" }}>
         <button
           type="button"
@@ -296,6 +304,7 @@ export default function App() {
           )}
         </div>
       </footer>
+      )}
 
       {importing && <ImportModal onClose={() => setImporting(false)} onFile={importProfile} />}
       {confirmingNew && (
