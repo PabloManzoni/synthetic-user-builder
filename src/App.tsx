@@ -5,7 +5,8 @@ import { WizardNavContext } from "./state/nav";
 import Stepper from "./components/Stepper";
 import StepShell from "./components/StepShell";
 import LiveProfilePreview from "./components/LiveProfilePreview";
-import { profileCompleteness } from "./lib/validation";
+import { profileCompleteness, validateProfile } from "./lib/validation";
+import type { StepStatus } from "./components/Stepper";
 import { STEPS } from "./steps";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -58,6 +59,17 @@ export default function App() {
     ],
     [profile, c, visited]
   );
+
+  // Per-step status for the index: unvisited → neutral, visited → ready/attention.
+  const status = useMemo<StepStatus[]>(() => {
+    const invalidSteps = new Set(
+      validateProfile(profile).dimensions.filter((d) => d.verdict === "invalid").map((d) => d.step)
+    );
+    return done.map((filled, i) => {
+      if (!visited.has(i)) return "unvisited";
+      return filled && !invalidSteps.has(i) ? "ready" : "attention";
+    });
+  }, [profile, done, visited]);
 
   const saveDraft = () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(profile));
@@ -126,7 +138,7 @@ export default function App() {
           >
             {leftCollapsed ? "»" : "«"}
           </button>
-          <Stepper current={step} done={done} onJump={go} collapsed={leftCollapsed} />
+          <Stepper current={step} status={status} onJump={go} collapsed={leftCollapsed} />
         </aside>
 
         {/* Step body */}
