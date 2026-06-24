@@ -60,6 +60,41 @@ function derive(p: SyntheticProfile) {
   };
 }
 
+// Raw dump of exactly what the Live Profile preview shows — the user's selections
+// as-is, with no AI rewrite and no derived narrative. This is the "View raw" download.
+export function toRawMarkdown(p: SyntheticProfile): string {
+  const e = p.expertise;
+  const sec = (title: string, body: string) => `${title}:\n${body || "—"}\n`;
+  const bullets = (arr: string[]) => (arr.length ? arr.map((x) => `- ${x}`).join("\n") : "—");
+  const tasks = (a: string[], b: string[]) => [...a, ...b];
+
+  return [
+    "# Synthetic User — raw selections",
+    "",
+    "```",
+    asciiFace(p.profileName),
+    "```",
+    "",
+    sec("Profile name", p.profileName),
+    sec("Reusable role", roleName(p)),
+    sec("Role summary", roleSummary(p)),
+    sec("Primary motivation", p.primaryMotivation),
+    sec("Domain expertise", e.domainExpertise),
+    sec("Technical proficiency", e.technicalProficiency),
+    sec("Product type familiarity", e.productTypeFamiliarity),
+    sec("Exact product familiarity", e.exactProductFamiliarity),
+    sec("Decision behavior", bullets(list(p.decisionBehavior))),
+    sec("Emotional & trust", bullets(list(p.emotionalBehavior))),
+    sec("Needs to see", bullets(list(p.informationNeeds))),
+    sec("Limits", bullets(list(p.constraints))),
+    sec("Won't guess", bullets(list(p.forbiddenAssumptions))),
+    sec("What trips them up", bullets(list(p.frictionTriggers))),
+    sec("When they stop or ask for help", bullets(list(p.abandonmentRules))),
+    sec("Suitable tasks", bullets(tasks(p.taskSuitability.suitable, p.taskSuitability.customSuitable))),
+    sec("Unsuitable tasks", bullets(tasks(p.taskSuitability.unsuitable, p.taskSuitability.customUnsuitable))),
+  ].join("\n");
+}
+
 export function toMarkdown(p: SyntheticProfile): string {
   const d = derive(p);
   const v = validateProfile(p);
