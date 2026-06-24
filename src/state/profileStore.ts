@@ -36,6 +36,8 @@ const initialProfile: SyntheticProfile = {
     aiConfidence: null,
     researched: false,
     researchFailed: false,
+    aiSuggestions: null,
+    aiSource: null,
   },
   role: { selectedRole: "", roleDescription: "", roleSource: "" },
   expertise: {

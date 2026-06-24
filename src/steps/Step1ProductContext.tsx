@@ -58,6 +58,8 @@ export default function Step1ProductContext() {
       aiConfidence: r.confidence,
       researched: true,
       researchFailed: r.failed,
+      aiSuggestions: r.suggestions,
+      aiSource: r.source,
       // Fill inferred fields, but never overwrite what the user already typed.
       manualDescription: c.manualDescription || r.description,
       knownPrimaryUsers: c.knownPrimaryUsers || r.primaryUsers,
@@ -176,11 +178,10 @@ export default function Step1ProductContext() {
                   <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-info)]">
                     AI understanding (editable)
                   </h4>
-                  {c.aiConfidence && (
-                    <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
-                      {c.aiConfidence} confidence
-                    </span>
-                  )}
+                  <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
+                    {c.aiSource === "ai" ? "Gemini" : "offline mock"}
+                    {c.aiConfidence ? ` · ${c.aiConfidence} confidence` : ""}
+                  </span>
                 </div>
                 <textarea
                   className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-[var(--color-ink)] outline-none"

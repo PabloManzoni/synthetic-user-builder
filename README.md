@@ -44,9 +44,18 @@ A 12-step guided wizard with a live profile preview that updates as you make sel
 Every option step offers three groups: **AI suggested** · **Common** · **Custom** — all check/uncheck-able,
 with editable, regenerable AI output.
 
-## Mock AI (no API key required)
+## AI (Gemini, with offline fallback)
 
-`src/ai/mockAi.ts` is a deterministic, offline engine. It is seeded with **real SmartSense by Digi** context
+`research()` in `src/ai/mockAi.ts` calls the serverless function `api/ai.ts`, which proxies
+**Google Gemini** (the API key lives only server-side). One call at "Search public context"
+produces the product summary + per-step suggestion banks, stored on the profile and consumed by
+every step. If there's no key or Gemini errors, it falls back to the deterministic mock below — so
+the app always works.
+
+Activate it by setting `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`) in the Vercel project's
+Environment Variables. Locally (Vite dev) there's no `/api`, so it uses the mock.
+
+`src/ai/mockAi.ts` is also a deterministic, offline engine. It is seeded with **real SmartSense by Digi** context
 (`src/ai/smartsenseSeed.ts`) so entering "SmartSense" / "Voyage" / cold-chain / temperature yields a believable
 product summary and role families (Cold-Chain Operations Coordinator, Multi-site Compliance Manager,
 Food-Safety / Quality Reviewer, Field Service Technician, Org Administrator). Any other product falls back to a

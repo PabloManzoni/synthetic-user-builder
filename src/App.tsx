@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useProfile, DRAFT_KEY } from "./state/profileStore";
 import { WizardNavContext } from "./state/nav";
 import Stepper from "./components/Stepper";
@@ -86,20 +86,16 @@ export default function App() {
 
         {/* Step body */}
         <main className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
-          <AnimatePresence mode="wait" custom={dir}>
-            <motion.div
-              key={step}
-              custom={dir}
-              initial={{ opacity: 0, x: dir * 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: dir * -24 }}
-              transition={{ duration: 0.22, ease: EASE }}
-            >
-              <StepShell step={step} title={current.title} helper={current.helper}>
-                <current.Body />
-              </StepShell>
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: dir * 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.22, ease: EASE }}
+          >
+            <StepShell step={step} title={current.title} helper={current.helper}>
+              <current.Body />
+            </StepShell>
+          </motion.div>
         </main>
 
         {/* Live preview */}

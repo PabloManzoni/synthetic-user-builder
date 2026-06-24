@@ -15,6 +15,18 @@ export interface SuggestedRole {
   confidence: Confidence;
 }
 
+/** Context-aware option suggestions per step (from real AI or the mock). */
+export interface AiSuggestions {
+  roles: SuggestedRole[];
+  decisionBehaviors: string[];
+  informationNeeds: string[];
+  forbiddenAssumptions: string[];
+  frictionTriggers: string[];
+  emotionalBehaviors: string[];
+  abandonmentRules: string[];
+  suitableTasks: string[];
+}
+
 export interface ProductContext {
   clientName: string;
   productName: string;
@@ -31,6 +43,10 @@ export interface ProductContext {
   researched: boolean;
   /** True when the mock found no reliable context. */
   researchFailed: boolean;
+  /** AI-generated per-step suggestions (null until research runs; mock fills it too). */
+  aiSuggestions: AiSuggestions | null;
+  /** "ai" when the real model produced suggestions, "mock" for the offline engine. */
+  aiSource: "ai" | "mock" | null;
 }
 
 export interface RoleSlice {

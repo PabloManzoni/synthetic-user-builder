@@ -1,15 +1,15 @@
-// Deterministic, offline mock AI. No API key required.
-//
-// TODO(real-ai): replace the bodies below with a real Claude call
-//   (model: "claude-opus-4-8") via a thin backend proxy. Keep these function
-//   signatures so the UI does not change. The mock is intentionally
-//   conservative: it never invents task steps and flags weak context.
+// AI layer. `research()` calls the real model (Gemini, via /api/ai) and falls
+// back to a deterministic offline mock when no key / on any error. The per-step
+// suggest*() helpers read whatever `research()` stored on the product context,
+// so the rest of the UI is unaware of which engine produced the options.
 
 import type {
   ProductContext,
   SuggestedRole,
   ExpertiseSlice,
+  AiSuggestions,
 } from "../state/types";
+import { callAi } from "./aiClient";
 import {
   SMARTSENSE_SUMMARY,
   SMARTSENSE_ROLES,
@@ -51,103 +51,158 @@ function matchBank(c: ProductContext): SuggestionBank | null {
 export interface ResearchResult {
   summary: string;
   confidence: "low" | "medium" | "high" | null;
-  roles: SuggestedRole[];
   failed: boolean;
   /** Inferred field values; the UI fills empty fields with these. */
   description: string;
   primaryUsers: string;
   riskAreas: string;
+  /** Per-step suggestions to store on the context (null only when failed). */
+  suggestions: AiSuggestions | null;
+  /** Which engine produced this result. */
+  source: "ai" | "mock";
 }
-
-/** Simulates public-context research. Returns a Promise to feel real. */
-export function research(c: ProductContext): Promise<ResearchResult> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const bank = matchBank(c);
-      if (bank) {
-        resolve({
-          summary: SMARTSENSE_SUMMARY,
-          confidence: SMARTSENSE_CONFIDENCE,
-          roles: SMARTSENSE_ROLES,
-          failed: false,
-          description:
-            "IoT temperature, humidity and location monitoring with digital food-safety " +
-            "checklists and real-time alerting across sites and in-transit shipments.",
-          primaryUsers:
-            "Cold-chain operations coordinators, multi-site compliance managers, " +
-            "food-safety / QA reviewers, and field technicians.",
-          riskAreas:
-            "Temperature excursions and spoilage, missed or ambiguous alerts, unconfirmed " +
-            "incident status, and compliance gaps (HACCP / FDA).",
-        });
-        return;
-      }
-      const text = contextText(c).trim();
-      if (text.length < 3) {
-        resolve({
-          summary: "",
-          confidence: null,
-          roles: [],
-          failed: true,
-          description: "",
-          primaryUsers: "",
-          riskAreas: "",
-        });
-        return;
-      }
-      // We have *some* text but no reliable public match: infer cautiously.
-      const label = c.productName || c.clientName || "this product";
-      resolve({
-        summary:
-          `We could not find reliable public information about ${label}. ` +
-          `Based only on what you entered, it appears to support an operational workflow. ` +
-          `Please edit these fields to describe the product.`,
-        confidence: "low",
-        roles: GENERIC_ROLES.slice(0, 6).map((name) => ({
-          name,
-          description: "Generic operational role — calibrate with the fields below.",
-          goodFor: "Bounded operational decisions from on-screen information.",
-          notFor: "Expert setup, deep audits, tasks needing outside knowledge.",
-          confidence: "low" as const,
-        })),
-        failed: false,
-        description: `${label} appears to be an operational tool — edit this to describe what it does.`,
-        primaryUsers: "Operational staff who make decisions from on-screen information.",
-        riskAreas: "Acting on missing, ambiguous, or stale information.",
-      });
-    }, 650);
-  });
-}
-
-// ---- Per-step AI suggestions (merged into the "AI suggested" group) ----
-// When a known bank matches we return rich, domain-specific options.
-// Otherwise we return a small inferred subset so the AI group is never noise.
 
 const inferred = (pool: string[]) => pool.slice(0, 4);
 
+/** Build the per-step suggestion set from the offline mock (bank or generic). */
+function mockSuggestions(c: ProductContext): AiSuggestions {
+  const bank = matchBank(c);
+  if (bank) {
+    return {
+      roles: SMARTSENSE_ROLES,
+      decisionBehaviors: bank.decisionBehaviors,
+      informationNeeds: bank.informationNeeds,
+      forbiddenAssumptions: bank.forbiddenAssumptions,
+      frictionTriggers: bank.frictionTriggers,
+      emotionalBehaviors: bank.emotionalBehaviors,
+      abandonmentRules: bank.abandonmentRules,
+      suitableTasks: bank.suitableTasks,
+    };
+  }
+  return {
+    roles: GENERIC_ROLES.slice(0, 6).map((name) => ({
+      name,
+      description: "Generic operational role — calibrate with the fields below.",
+      goodFor: "Bounded operational decisions from on-screen information.",
+      notFor: "Expert setup, deep audits, tasks needing outside knowledge.",
+      confidence: "low" as const,
+    })),
+    decisionBehaviors: inferred(GENERIC_DECISION_BEHAVIORS),
+    informationNeeds: inferred(GENERIC_INFORMATION_NEEDS),
+    forbiddenAssumptions: inferred(GENERIC_FORBIDDEN_ASSUMPTIONS),
+    frictionTriggers: inferred(GENERIC_FRICTION_TRIGGERS),
+    emotionalBehaviors: inferred(GENERIC_EMOTIONAL_BEHAVIORS),
+    abandonmentRules: inferred(GENERIC_ABANDONMENT_RULES),
+    suitableTasks: inferred(GENERIC_SUITABLE_TASKS),
+  };
+}
+
+function mockResearch(c: ProductContext): ResearchResult {
+  const bank = matchBank(c);
+  if (bank) {
+    return {
+      summary: SMARTSENSE_SUMMARY,
+      confidence: SMARTSENSE_CONFIDENCE,
+      failed: false,
+      description:
+        "IoT temperature, humidity and location monitoring with digital food-safety " +
+        "checklists and real-time alerting across sites and in-transit shipments.",
+      primaryUsers:
+        "Cold-chain operations coordinators, multi-site compliance managers, " +
+        "food-safety / QA reviewers, and field technicians.",
+      riskAreas:
+        "Temperature excursions and spoilage, missed or ambiguous alerts, unconfirmed " +
+        "incident status, and compliance gaps (HACCP / FDA).",
+      suggestions: mockSuggestions(c),
+      source: "mock",
+    };
+  }
+  const text = contextText(c).trim();
+  if (text.length < 3) {
+    return {
+      summary: "",
+      confidence: null,
+      failed: true,
+      description: "",
+      primaryUsers: "",
+      riskAreas: "",
+      suggestions: null,
+      source: "mock",
+    };
+  }
+  const label = c.productName || c.clientName || "this product";
+  return {
+    summary:
+      `We could not find reliable public information about ${label}. ` +
+      `Based only on what you entered, it appears to support an operational workflow. ` +
+      `Please edit these fields to describe the product.`,
+    confidence: "low",
+    failed: false,
+    description: `${label} appears to be an operational tool — edit this to describe what it does.`,
+    primaryUsers: "Operational staff who make decisions from on-screen information.",
+    riskAreas: "Acting on missing, ambiguous, or stale information.",
+    suggestions: mockSuggestions(c),
+    source: "mock",
+  };
+}
+
+/**
+ * Researches product context. Tries the real model (/api/ai → Gemini) first;
+ * on no-key / error / weak response, falls back to the deterministic mock.
+ */
+export async function research(c: ProductContext): Promise<ResearchResult> {
+  const ai = await callAi(c);
+  if (ai) {
+    return {
+      summary: ai.summary,
+      confidence: ai.confidence,
+      failed: false,
+      description: ai.description,
+      primaryUsers: ai.primaryUsers,
+      riskAreas: ai.riskAreas,
+      suggestions: { roles: ai.roles, ...ai.suggestions },
+      source: "ai",
+    };
+  }
+  // Small delay so the mock fallback still feels like work happened.
+  await new Promise((r) => setTimeout(r, 400));
+  return mockResearch(c);
+}
+
+// ---- Per-step suggestions ----
+// Prefer whatever research() stored on the context (real AI or mock); only fall
+// back to keyword matching for contexts that never went through research.
+
 export const suggestRoles = (c: ProductContext): SuggestedRole[] =>
-  matchBank(c) ? SMARTSENSE_ROLES : [];
+  c.aiSuggestions?.roles ?? (matchBank(c) ? SMARTSENSE_ROLES : []);
 
 export const suggestDecisionBehaviors = (c: ProductContext): string[] =>
-  matchBank(c)?.decisionBehaviors ?? (c.researched ? inferred(GENERIC_DECISION_BEHAVIORS) : []);
+  c.aiSuggestions?.decisionBehaviors ??
+  (matchBank(c)?.decisionBehaviors ?? (c.researched ? inferred(GENERIC_DECISION_BEHAVIORS) : []));
 
 export const suggestInformationNeeds = (c: ProductContext): string[] =>
-  matchBank(c)?.informationNeeds ?? (c.researched ? inferred(GENERIC_INFORMATION_NEEDS) : []);
+  c.aiSuggestions?.informationNeeds ??
+  (matchBank(c)?.informationNeeds ?? (c.researched ? inferred(GENERIC_INFORMATION_NEEDS) : []));
 
 export const suggestForbiddenAssumptions = (c: ProductContext): string[] =>
-  matchBank(c)?.forbiddenAssumptions ?? (c.researched ? inferred(GENERIC_FORBIDDEN_ASSUMPTIONS) : []);
+  c.aiSuggestions?.forbiddenAssumptions ??
+  (matchBank(c)?.forbiddenAssumptions ?? (c.researched ? inferred(GENERIC_FORBIDDEN_ASSUMPTIONS) : []));
 
 export const suggestFrictionTriggers = (c: ProductContext): string[] =>
-  matchBank(c)?.frictionTriggers ?? (c.researched ? inferred(GENERIC_FRICTION_TRIGGERS) : []);
+  c.aiSuggestions?.frictionTriggers ??
+  (matchBank(c)?.frictionTriggers ?? (c.researched ? inferred(GENERIC_FRICTION_TRIGGERS) : []));
 
 export const suggestEmotionalBehaviors = (c: ProductContext): string[] =>
-  matchBank(c)?.emotionalBehaviors ?? (c.researched ? inferred(GENERIC_EMOTIONAL_BEHAVIORS) : []);
+  c.aiSuggestions?.emotionalBehaviors ??
+  (matchBank(c)?.emotionalBehaviors ?? (c.researched ? inferred(GENERIC_EMOTIONAL_BEHAVIORS) : []));
 
 export const suggestAbandonmentRules = (c: ProductContext): string[] =>
-  matchBank(c)?.abandonmentRules ?? (c.researched ? inferred(GENERIC_ABANDONMENT_RULES) : []);
+  c.aiSuggestions?.abandonmentRules ??
+  (matchBank(c)?.abandonmentRules ?? (c.researched ? inferred(GENERIC_ABANDONMENT_RULES) : []));
 
 export const suggestSuitableTasks = (c: ProductContext): string[] =>
-  matchBank(c)?.suitableTasks ?? (c.researched ? inferred(GENERIC_SUITABLE_TASKS) : []);
+  c.aiSuggestions?.suitableTasks ??
+  (matchBank(c)?.suitableTasks ?? (c.researched ? inferred(GENERIC_SUITABLE_TASKS) : []));
 
 // ---- Fill-with-AI generators (deterministic mock; see TODO(real-ai)) ----
 

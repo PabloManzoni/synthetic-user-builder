@@ -1,0 +1,30 @@
+// Client-side caller for the /api/ai serverless function (Gemini).
+// Returns null on any failure so callers can fall back to the deterministic mock.
+
+import type { ProductContext, AiSuggestions } from "../state/types";
+
+export interface AiResearchResponse {
+  summary: string;
+  confidence: "low" | "medium" | "high";
+  description: string;
+  primaryUsers: string;
+  riskAreas: string;
+  roles: AiSuggestions["roles"];
+  suggestions: Omit<AiSuggestions, "roles">;
+}
+
+export async function callAi(ctx: ProductContext): Promise<AiResearchResponse | null> {
+  try {
+    const res = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ctx),
+    });
+    if (!res.ok) return null; // 503 (no key), 502 (gemini error), etc. → fall back to mock
+    const data = (await res.json()) as AiResearchResponse;
+    if (!data || !data.suggestions || !Array.isArray(data.roles)) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
