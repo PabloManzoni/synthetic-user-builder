@@ -48,7 +48,7 @@ export function profileCompleteness(p: SyntheticProfile): Completeness {
     color = "var(--color-info)";
   } else if (pct > 0) {
     label = "Just started";
-    color = "var(--color-risk)";
+    color = "var(--color-info)"; // progress, not a warning — never amber/red here
   }
   return { filled, total, pct, label, color };
 }
