@@ -79,7 +79,10 @@ export default function Step2Role() {
 
       <section>
         <div className="mb-2 flex items-center justify-between">
-          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">AI suggested</h4>
+          <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-info)" }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-info)" }} />
+            AI suggested
+          </h4>
           {aiRoles.length > 0 && (
             <AiFillButton
               variant="ai"
@@ -99,9 +102,12 @@ export default function Step2Role() {
         )}
       </section>
 
-      <section>
+      <section className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
         <div className="mb-2 flex items-center justify-between">
-          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Common roles</h4>
+          <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-border-strong)" }} />
+            Common roles
+          </h4>
           <AiFillButton
             variant="random"
             label="Randomize"
@@ -145,8 +151,11 @@ export default function Step2Role() {
         </div>
       </section>
 
-      <section className="space-y-2">
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Custom role</h4>
+      <section className="space-y-2 border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
+        <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-border-strong)" }} />
+          Custom role
+        </h4>
         {r.custom.length > 0 && (
           <div className="mb-1 flex flex-wrap gap-1.5">
             {r.custom.map((name) => (

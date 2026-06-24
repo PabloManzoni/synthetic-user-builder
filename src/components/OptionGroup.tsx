@@ -3,10 +3,20 @@ import CustomOptionInput from "./CustomOptionInput";
 import AiFillButton from "./AiFillButton";
 import AiEmptyHint from "./AiEmptyHint";
 
-function GroupHeader({ title, action }: { title: string; action?: React.ReactNode }) {
+function GroupHeader({
+  title,
+  action,
+  tone,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  tone?: string;
+}) {
   return (
     <div className="mb-2 flex items-center justify-between">
-      <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
+      <h4 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider"
+          style={{ color: tone ?? "var(--color-ink-faint)" }}>
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: tone ?? "var(--color-border-strong)" }} />
         {title}
       </h4>
       {action}
@@ -50,6 +60,7 @@ export default function OptionGroup({
       <section>
         <GroupHeader
           title="AI suggested"
+          tone="var(--color-info)"
           action={
             <span className="flex items-center gap-3">
               {onSelectForMe && aiOptions.length > 0 && (
@@ -87,7 +98,7 @@ export default function OptionGroup({
         )}
       </section>
 
-      <section>
+      <section className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
         <GroupHeader
           title="Common"
           action={
@@ -110,7 +121,7 @@ export default function OptionGroup({
         </div>
       </section>
 
-      <section>
+      <section className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
         <GroupHeader title="Custom" />
         {custom.length > 0 && (
           <div className="mb-2 space-y-2">
