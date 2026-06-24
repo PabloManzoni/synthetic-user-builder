@@ -108,7 +108,7 @@ export default function Step1ProductContext() {
         <Labeled label="Product description">
           <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={7} value={c.manualDescription}
                     onChange={(e) => patch({ manualDescription: e.target.value })}
-                    placeholder={"Describe the product, or paste its website, links and any details…\n\ne.g. https://comptrain.co — CrossFit programming & gym management: classes, athlete tracking, leaderboards"} />
+                    placeholder={"Describe the product, or paste its website, links and any details…\n\ne.g. https://www.spotify.com — music streaming: playlists, recommendations, podcasts, offline listening"} />
         </Labeled>
         <p className="mt-1.5 flex gap-1.5 text-[12px] leading-snug text-[var(--color-ink-faint)]">
           <span aria-hidden>💡</span>
