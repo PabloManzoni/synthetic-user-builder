@@ -81,7 +81,7 @@ Hard rules:
 - Forbidden assumptions must start with "Cannot ...".
 - Output STRICT JSON only, matching the requested shape. No prose, no markdown.`;
 
-function buildPrompt(ctx: any): string {
+function buildPrompt(ctx: any, pageContent: string): string {
   const common = ctx.commonPools || {};
   const commonText = Object.keys(common).length
     ? "\nCOMMON OPTIONS you may ALSO draw from for 'recommended' if they fit this role:\n" +
@@ -89,6 +89,11 @@ function buildPrompt(ctx: any): string {
         .map(([k, v]) => `- ${k}: ${(v as string[]).join(" | ")}`)
         .join("\n")
     : "";
+  const pageBlock = pageContent
+    ? `\nFETCHED PAGE CONTENT (REAL text scraped from the URL(s) the user pasted — base your understanding on THIS, not on guesses):\n"""\n${pageContent}\n"""\n`
+    : ctx.manualDescription && /https?:\/\//.test(ctx.manualDescription)
+      ? "\nNOTE: The user pasted a URL but its content could NOT be fetched. Do NOT invent specifics — set confidence to 'low' and say the page couldn't be read.\n"
+      : "";
   return `${SYSTEM}
 
 PRODUCT CONTEXT (from the user; may be partial):
@@ -97,7 +102,7 @@ PRODUCT CONTEXT (from the user; may be partial):
 - Description: ${ctx.manualDescription || "(none)"}
 - Primary users: ${ctx.knownPrimaryUsers || "(unknown)"}
 - Known risk areas: ${ctx.knownRiskAreas || "(unknown)"}
-${commonText}
+${pageBlock}${commonText}
 
 Return JSON with EXACTLY this shape:
 {
@@ -135,6 +140,33 @@ above — pick whatever genuinely fits, AI-suggested or common, not just the fir
 weak, lower the confidence and keep items generic but still behavioral.`;
 }
 
+// Give the function room to fetch the page(s) + call Gemini.
+export const config = { maxDuration: 30 };
+
+// Fetch a URL and return readable text (title + meta description + stripped body).
+async function fetchPageText(url: string): Promise<string> {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; SyntheticUserBuilder/1.0)" },
+    });
+    clearTimeout(timer);
+    const ct = res.headers.get("content-type") || "";
+    if (!res.ok || !/text\/html|text\/plain/i.test(ct)) return "";
+    let html = (await res.text()).slice(0, 200000);
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ");
+    const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "";
+    const meta = (html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']+)["']/i) || [])[1] || "";
+    const og = (html.match(/<meta[^>]+property=["']og:description["'][^>]*content=["']([^"']+)["']/i) || [])[1] || "";
+    const body = html.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
+    return `URL: ${url}\nTITLE: ${title}\nDESCRIPTION: ${meta} ${og}\nBODY: ${body}`.slice(0, 4000);
+  } catch {
+    return "";
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -147,7 +179,10 @@ export default async function handler(req: any, res: any) {
 
   try {
     const ctx = (typeof req.body === "string" ? JSON.parse(req.body) : req.body) || {};
-    const r = await geminiJSON(buildPrompt(ctx), 0.7);
+    const urls: string[] = ((ctx.manualDescription || "").match(/https?:\/\/[^\s)]+/g) || []).slice(0, 2);
+    const pages = urls.length ? (await Promise.all(urls.map(fetchPageText))).filter(Boolean) : [];
+    const pageContent = pages.join("\n\n---\n\n");
+    const r = await geminiJSON(buildPrompt(ctx, pageContent), 0.7);
     if (!r.ok) {
       res.status(502).json({ error: "gemini_error", status: r.status, detail: (r as any).detail });
       return;
