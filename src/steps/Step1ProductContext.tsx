@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProfile } from "../state/profileStore";
 import { research } from "../ai/mockAi";
@@ -43,10 +43,26 @@ const MODES: { key: ResearchMode; label: string; hint: string }[] = [
   { key: "skip", label: "Skip product context", hint: "Continue with generic options only" },
 ];
 
+const RESEARCH_STEPS = [
+  "Reading public signals about the product…",
+  "Understanding the domain and users…",
+  "Inferring likely operational roles…",
+  "Tailoring suggestions for every step…",
+];
+
 export default function Step1ProductContext() {
   const { profile, dispatch } = useProfile();
   const c = profile.productContext;
   const [loading, setLoading] = useState(false);
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  // Cycle the status messages while AI research runs.
+  useEffect(() => {
+    if (!loading) return;
+    setMsgIndex(0);
+    const id = setInterval(() => setMsgIndex((i) => (i + 1) % RESEARCH_STEPS.length), 1300);
+    return () => clearInterval(id);
+  }, [loading]);
 
   const patch = (p: Partial<typeof c>) => dispatch({ type: "patchProductContext", patch: p });
 
@@ -128,15 +144,57 @@ export default function Step1ProductContext() {
       </div>
 
       {c.researchMode === "search" && (
-        <button
-          type="button"
-          onClick={runResearch}
-          disabled={loading}
-          className="w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60"
-          style={{ background: "var(--color-accent)", color: "#0b0d10" }}
-        >
-          {loading ? "Researching…" : c.researched ? "Re-run research" : "Search public context"}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={runResearch}
+            disabled={loading}
+            className="relative w-full overflow-hidden rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-wait"
+            style={{ background: "var(--color-accent)", color: "#0b0d10" }}
+          >
+            {/* shimmer sweep while loading */}
+            {loading && (
+              <motion.span
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)" }}
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+              />
+            )}
+            <span className="relative flex items-center justify-center gap-2">
+              {loading && (
+                <motion.span
+                  aria-hidden
+                  className="inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
+                />
+              )}
+              {loading ? "Researching with AI…" : c.researched ? "Re-run research" : "Search public context"}
+            </span>
+          </button>
+
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.p
+                key={msgIndex}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.25 }}
+                className="text-center text-[12px] text-[var(--color-info)]"
+              >
+                {RESEARCH_STEPS[msgIndex]}
+              </motion.p>
+            ) : (
+              <p className="text-center text-[11px] text-[var(--color-ink-faint)]">
+                This shapes the roles, behaviors and AI suggestions across every step.
+              </p>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       {(c.researchMode === "manual" || c.researchMode === "search") && (
