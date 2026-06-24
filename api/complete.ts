@@ -6,7 +6,57 @@
 // Key lives only here (GEMINI_API_KEY). Falls back to non-200 → client keeps
 // the deterministic text.
 
-import { geminiJSON } from "../geminiCall";
+// Resilient Gemini call: retries transient 503/429 and falls back across models.
+async function geminiJSON(
+  prompt: string,
+  temperature = 0.7
+): Promise<{ ok: true; data: any } | { ok: false; status: number }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return { ok: false, status: 503 };
+  const primary = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const models = Array.from(new Set([primary, "gemini-2.5-flash", "gemini-1.5-flash"]));
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  let lastStatus = 503;
+  for (const model of models) {
+    for (let a = 0; a < 2; a++) {
+      let res: Response;
+      try {
+        res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: "application/json", temperature },
+            }),
+          }
+        );
+      } catch {
+        lastStatus = 599;
+        await sleep(400);
+        continue;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+        try {
+          return { ok: true, data: JSON.parse(text) };
+        } catch {
+          lastStatus = 502;
+          break;
+        }
+      }
+      lastStatus = res.status;
+      if (res.status === 503 || res.status === 429) {
+        await sleep(500 * (a + 1));
+        continue;
+      }
+      break;
+    }
+  }
+  return { ok: false, status: lastStatus };
+}
 
 const SYSTEM = `You write a REUSABLE SYNTHETIC USER PROFILE — a constrained decision agent, not a persona.
 You are given the user's selections. Write rich, coherent, second-or-third-person prose for each field.
