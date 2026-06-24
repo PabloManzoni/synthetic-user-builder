@@ -1,10 +1,27 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { useProfile } from "../state/profileStore";
 import { useWizardNav } from "../state/nav";
 import { validateProfile } from "../lib/validation";
 import { type Verdict, STEP_TITLES } from "../state/types";
 import WarningBanner from "./WarningBanner";
+import { suggestRoles, recommendedFor, generatePrimaryMotivation } from "../ai/mockAi";
+import { BEHAVIOR_AXES } from "../ai/behaviorAxes";
+import { randomSubset, randomFrom } from "../lib/random";
+import {
+  GENERIC_ROLES,
+  DOMAIN_EXPERTISE_LEVELS,
+  TECHNICAL_LEVELS,
+  PRODUCT_TYPE_FAMILIARITY,
+  EXACT_PRODUCT_FAMILIARITY,
+  GENERIC_EMOTIONAL_BEHAVIORS,
+  GENERIC_INFORMATION_NEEDS,
+  GENERIC_CONSTRAINTS,
+  GENERIC_FORBIDDEN_ASSUMPTIONS,
+  GENERIC_FRICTION_TRIGGERS,
+  GENERIC_ABANDONMENT_RULES,
+  GENERIC_SUITABLE_TASKS,
+  GENERIC_UNSUITABLE_TASKS,
+} from "../ai/genericOptions";
 
 const color = (v: Verdict) =>
   v === "strong"
@@ -30,9 +47,79 @@ export default function ValidationPanel() {
   const v = validateProfile(profile);
   void nonce;
 
-  const applyFix = (assumption: string) => {
-    dispatch({ type: "addCustom", key: "forbiddenAssumptions", value: assumption });
-    dispatch({ type: "toggleOption", key: "forbiddenAssumptions", value: assumption });
+  // Fill every empty/weak section in one move: AI suggestions where we have them,
+  // sensible random data otherwise. Never overwrites what the user already set.
+  const fixEverything = () => {
+    const p = profile;
+    const ctx = p.productContext;
+    const ai = ctx.aiSuggestions;
+    const pick = (
+      cat: Parameters<typeof recommendedFor>[1],
+      aiArr: string[],
+      common: string[],
+      min: number,
+      max: number
+    ): string[] => {
+      if (aiArr.length) {
+        const reco = recommendedFor(ctx, cat, aiArr, common);
+        if (reco.length) return reco;
+      }
+      return randomSubset(common, min, max);
+    };
+
+    // Role
+    let roleName = p.role.selected[0] ?? "";
+    if (p.role.selected.length === 0) {
+      const aiRoles = suggestRoles(ctx);
+      if (aiRoles.length) {
+        roleName = aiRoles[0].name;
+        dispatch({ type: "toggleRole", name: aiRoles[0].name, description: aiRoles[0].description });
+      } else {
+        roleName = randomFrom(GENERIC_ROLES);
+        dispatch({ type: "toggleRole", name: roleName, description: `A general ${roleName.toLowerCase()} — shaped for this profile.` });
+      }
+    }
+
+    // Expertise
+    const e = p.expertise;
+    const ePatch: Record<string, string> = {};
+    if (!e.domainExpertise) ePatch.domainExpertise = randomFrom(DOMAIN_EXPERTISE_LEVELS);
+    if (!e.technicalProficiency) ePatch.technicalProficiency = randomFrom(TECHNICAL_LEVELS);
+    if (!e.productTypeFamiliarity) ePatch.productTypeFamiliarity = randomFrom(PRODUCT_TYPE_FAMILIARITY);
+    if (!e.exactProductFamiliarity) ePatch.exactProductFamiliarity = randomFrom(EXACT_PRODUCT_FAMILIARITY);
+    if (Object.keys(ePatch).length) dispatch({ type: "patchExpertise", patch: ePatch });
+
+    // Decision behavior (via the spectrum axes)
+    if (p.decisionBehavior.selected.length === 0)
+      BEHAVIOR_AXES.forEach((a) => dispatch({ type: "setBehaviorAxis", key: a.key, value: Math.floor(Math.random() * 5) }));
+
+    // Option sections — fill empties, and top up the weak ones the validator flags.
+    if (p.emotionalBehavior.selected.length === 0)
+      dispatch({ type: "setSelected", key: "emotionalBehavior", values: pick("emotionalBehaviors", ai?.emotionalBehaviors ?? [], GENERIC_EMOTIONAL_BEHAVIORS, 3, 5) });
+    if (p.informationNeeds.selected.length === 0)
+      dispatch({ type: "setSelected", key: "informationNeeds", values: pick("informationNeeds", ai?.informationNeeds ?? [], GENERIC_INFORMATION_NEEDS, 4, 6) });
+    if (p.constraints.selected.length < 3)
+      dispatch({ type: "setSelected", key: "constraints", values: randomSubset(GENERIC_CONSTRAINTS, 3, 5) });
+    if (p.forbiddenAssumptions.selected.length < 4)
+      dispatch({ type: "setSelected", key: "forbiddenAssumptions", values: pick("forbiddenAssumptions", ai?.forbiddenAssumptions ?? [], GENERIC_FORBIDDEN_ASSUMPTIONS, 4, 7) });
+    if (p.frictionTriggers.selected.length === 0)
+      dispatch({ type: "setSelected", key: "frictionTriggers", values: pick("frictionTriggers", ai?.frictionTriggers ?? [], GENERIC_FRICTION_TRIGGERS, 3, 5) });
+    if (p.abandonmentRules.selected.length === 0)
+      dispatch({ type: "setSelected", key: "abandonmentRules", values: pick("abandonmentRules", ai?.abandonmentRules ?? [], GENERIC_ABANDONMENT_RULES, 3, 5) });
+
+    // Task suitability
+    if (p.taskSuitability.suitable.length === 0)
+      dispatch({
+        type: "patchTaskSuitability",
+        patch: {
+          suitable: pick("suitableTasks", ai?.suitableTasks ?? [], GENERIC_SUITABLE_TASKS, 3, 5),
+          unsuitable: p.taskSuitability.unsuitable.length === 0 ? randomSubset(GENERIC_UNSUITABLE_TASKS, 2, 4) : p.taskSuitability.unsuitable,
+        },
+      });
+
+    // Primary motivation
+    if (!p.primaryMotivation.trim())
+      dispatch({ type: "patchTop", patch: { primaryMotivation: generatePrimaryMotivation(roleName, ctx) } });
   };
 
   return (
@@ -82,32 +169,25 @@ export default function ValidationPanel() {
         </div>
       )}
 
-      {v.suggestedFixes.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
-            Suggested fixes
-          </h4>
-          {v.suggestedFixes.map((f) => {
-            const already = profile.forbiddenAssumptions.custom.includes(f.assumption);
-            return (
-              <motion.div
-                key={f.assumption}
-                className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
-                style={{ borderColor: "var(--color-border)" }}
-              >
-                <span className="text-[13px] text-[var(--color-ink-soft)]">{f.label}</span>
-                <button
-                  type="button"
-                  disabled={already}
-                  onClick={() => applyFix(f.assumption)}
-                  className="shrink-0 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors disabled:opacity-40"
-                  style={{ borderColor: "var(--color-accent)", color: "var(--color-accent)" }}
-                >
-                  {already ? "Applied" : "Apply fix"}
-                </button>
-              </motion.div>
-            );
-          })}
+      {v.overall !== "strong" && (
+        <div
+          className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+          style={{ borderColor: "var(--color-accent)", background: "var(--color-surface-2)" }}
+        >
+          <div>
+            <div className="text-[13px] font-medium text-[var(--color-ink)]">Fix everything for me</div>
+            <div className="text-[11px] text-[var(--color-ink-faint)]">
+              Fills every empty or weak section with AI suggestions (and sensible random data). Won't touch what you already set.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={fixEverything}
+            className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+            style={{ background: "var(--color-accent)", color: "#0b0d10" }}
+          >
+            ✨ Fix everything
+          </button>
         </div>
       )}
 
