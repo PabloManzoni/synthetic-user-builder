@@ -2,13 +2,12 @@ import OptionStep from "./OptionStep";
 import { suggestForbiddenAssumptions } from "../ai/mockAi";
 import { generateConstraintRule, generateForbiddenRule } from "../ai/mockAi";
 import { GENERIC_CONSTRAINTS, GENERIC_FORBIDDEN_ASSUMPTIONS } from "../ai/genericOptions";
-import { useWizardNav } from "../state/nav";
+import AiEmptyHint from "../components/AiEmptyHint";
 
 const joinRules = (fn: (o: string) => string) => (selected: string[], custom: string[]) =>
   [...selected, ...custom].map(fn).join("\n");
 
 export default function Step6Constraints() {
-  const go = useWizardNav();
   return (
     <div className="space-y-8">
       <div className="space-y-6">
@@ -23,6 +22,14 @@ export default function Step6Constraints() {
           customPlaceholder="Other constraint…"
           generatedTitle="Generated constraints"
           generate={joinRules(generateConstraintRule)}
+          aiEmptyHint={
+            <p
+              className="rounded-lg border border-dashed px-3 py-2.5 text-xs leading-snug text-[var(--color-ink-faint)]"
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              Constraints come from the common list below — pick the ones that bound this agent.
+            </p>
+          }
         />
       </div>
 
@@ -41,18 +48,7 @@ export default function Step6Constraints() {
           generatedTitle="Generated forbidden rules"
           generate={joinRules(generateForbiddenRule)}
           warnIfEmpty="This profile is likely too weak. Add forbidden assumptions to prevent the synthetic user from compensating for missing interface information."
-          aiEmptyHint={
-            <>
-              No AI suggestions yet — add product context to get tailored ones.{" "}
-              <button
-                type="button"
-                onClick={() => go(0)}
-                className="font-medium text-[var(--color-info)] underline underline-offset-2"
-              >
-                Go to product context
-              </button>
-            </>
-          }
+          aiEmptyHint={<AiEmptyHint what="AI-suggested forbidden assumptions" />}
         />
       </div>
     </div>

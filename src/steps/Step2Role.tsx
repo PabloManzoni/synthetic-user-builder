@@ -5,6 +5,7 @@ import { GENERIC_ROLES } from "../ai/genericOptions";
 import { detectDemographicOnly } from "../lib/validation";
 import WarningBanner from "../components/WarningBanner";
 import AiFillButton from "../components/AiFillButton";
+import AiEmptyHint from "../components/AiEmptyHint";
 import type { SuggestedRole } from "../state/types";
 
 export default function Step2Role() {
@@ -46,23 +47,27 @@ export default function Step2Role() {
 
   return (
     <>
-      {aiRoles.length > 0 && (
-        <section>
-          <div className="mb-2 flex items-center justify-between">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">AI suggested</h4>
+      <section>
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">AI suggested</h4>
+          {aiRoles.length > 0 && (
             <AiFillButton
               variant="ai"
               label="Suggest role"
               onClick={() => select(aiRoles[0].name, aiRoles[0].description, "ai")}
             />
-          </div>
+          )}
+        </div>
+        {aiRoles.length > 0 ? (
           <div className="space-y-2">
             {aiRoles.map((role) => (
               <RoleCard key={role.name} role={role} />
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <AiEmptyHint what="AI-suggested roles" />
+        )}
+      </section>
 
       <section>
         <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Common roles</h4>

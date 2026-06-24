@@ -4,6 +4,7 @@ import { GENERIC_SUITABLE_TASKS, GENERIC_UNSUITABLE_TASKS } from "../ai/genericO
 import SelectableOption from "../components/SelectableOption";
 import CustomOptionInput from "../components/CustomOptionInput";
 import AiFillButton from "../components/AiFillButton";
+import AiEmptyHint from "../components/AiEmptyHint";
 
 export default function Step10TaskSuitability() {
   const { profile, dispatch } = useProfile();
@@ -39,12 +40,14 @@ export default function Step10TaskSuitability() {
             />
           )}
         </div>
-        {aiSuitable.length > 0 && (
+        {aiSuitable.length > 0 ? (
           <div className="space-y-2">
             {aiSuitable.map((o) => (
               <SelectableOption key={o} label={o} source="ai" selected={t.suitable.includes(o)} onToggle={() => toggle("suitable", o)} />
             ))}
           </div>
+        ) : (
+          <AiEmptyHint what="AI-suggested task types" />
         )}
         <div className="space-y-2">
           {GENERIC_SUITABLE_TASKS.map((o) => (

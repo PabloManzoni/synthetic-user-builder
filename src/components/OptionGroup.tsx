@@ -1,6 +1,7 @@
 import SelectableOption from "./SelectableOption";
 import CustomOptionInput from "./CustomOptionInput";
 import AiFillButton from "./AiFillButton";
+import AiEmptyHint from "./AiEmptyHint";
 
 function GroupHeader({ title, action }: { title: string; action?: React.ReactNode }) {
   return (
@@ -76,10 +77,7 @@ export default function OptionGroup({
             ))}
           </div>
         ) : (
-          <p className="rounded-lg border border-dashed px-3 py-2.5 text-xs text-[var(--color-ink-faint)]"
-             style={{ borderColor: "var(--color-border)" }}>
-            {aiEmptyHint ?? "No AI suggestions yet. Add product context in Step 1, or use the common options below."}
-          </p>
+          aiEmptyHint ?? <AiEmptyHint />
         )}
       </section>
 
