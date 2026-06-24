@@ -119,17 +119,6 @@ export default function Step1ProductContext() {
         </p>
       </div>
 
-      <div className="space-y-4">
-        <Labeled label="Primary users" optional>
-          <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownPrimaryUsers}
-                    onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most? e.g. warehouse staff, drivers, store managers" />
-        </Labeled>
-        <Labeled label="Risk areas" optional>
-          <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownRiskAreas}
-                    onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if it's misread? e.g. a missed alert, a wrong status" />
-        </Labeled>
-      </div>
-
       {c.researchMode !== "skip" && (
         <div className="space-y-2">
           <button
@@ -158,7 +147,7 @@ export default function Step1ProductContext() {
                   transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
                 />
               )}
-              {loading ? "Researching with AI…" : c.researched ? "Search again" : "Research with AI"}
+              {loading ? "Analyzing…" : c.researched ? "Analyze again" : "Analyze information"}
             </span>
           </button>
 
@@ -218,6 +207,16 @@ export default function Step1ProductContext() {
                 </p>
               </div>
             )}
+
+            {/* Surfaced after analysis: AI pre-fills these, you tweak them. */}
+            <Labeled label="Primary users" optional>
+              <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownPrimaryUsers}
+                        onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most? e.g. warehouse staff, drivers, store managers" />
+            </Labeled>
+            <Labeled label="Risk areas" optional>
+              <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownRiskAreas}
+                        onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if it's misread? e.g. a missed alert, a wrong status" />
+            </Labeled>
           </motion.div>
         )}
       </AnimatePresence>
