@@ -111,7 +111,7 @@ export default function Step10TaskSuitability() {
         <div className="border-t pt-4" style={{ borderColor: "var(--color-border)" }}>
           <GroupLabel label="Common" />
           <div className="space-y-2">
-            {GENERIC_SUITABLE_TASKS.map((o) => (
+            {GENERIC_SUITABLE_TASKS.filter((o) => !aiSuitable.includes(o)).map((o) => (
               <SelectableOption key={o} label={o} source="common" selected={t.suitable.includes(o)} onToggle={() => toggle("suitable", o)} />
             ))}
           </div>

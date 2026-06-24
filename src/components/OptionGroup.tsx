@@ -128,16 +128,18 @@ export default function OptionGroup({
           }
         />
         <div className="space-y-2">
-          {commonOptions.map((o) => (
-            <SelectableOption
-              key={o}
-              label={o}
-              source="common"
-              type={type}
-              selected={selected.includes(o)}
-              onToggle={() => onToggle(o)}
-            />
-          ))}
+          {commonOptions
+            .filter((o) => !aiOptions.includes(o))
+            .map((o) => (
+              <SelectableOption
+                key={o}
+                label={o}
+                source="common"
+                type={type}
+                selected={selected.includes(o)}
+                onToggle={() => onToggle(o)}
+              />
+            ))}
         </div>
       </section>
     </div>
