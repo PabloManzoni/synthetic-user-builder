@@ -203,7 +203,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   dims.push({
     key: "constraints",
     label: "Constraint strength",
-    step: 5,
+    step: 4,
     verdict: constraintCount >= 3 ? "strong" : constraintCount >= 1 ? "refine" : "invalid",
     explanation:
       constraintCount >= 3
@@ -218,7 +218,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   dims.push({
     key: "forbidden",
     label: "Forbidden assumption quality",
-    step: 5,
+    step: 4,
     verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 1 ? "refine" : "invalid",
     explanation:
       forbiddenCount >= 4
@@ -243,6 +243,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "overguidance",
     label: "Risk of overguidance",
     step: 3,
+    // (decision behavior lives in step 3 "Behavior & trust")
     verdict: taskLeak ? "invalid" : "strong",
     explanation: taskLeak
       ? "Profile contains task or navigation language. Remove product-specific steps."
@@ -269,7 +270,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   dims.push({
     key: "tooSmart",
     label: "Risk of being too smart",
-    step: 5,
+    step: 4,
     verdict: backend ? "refine" : forbiddenCount >= 3 ? "strong" : "refine",
     explanation: backend
       ? "Profile grants internal/backend knowledge the agent should not have."
@@ -286,7 +287,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   dims.push({
     key: "compensation",
     label: "Risk of compensating for interface gaps",
-    step: 5,
+    step: 4,
     verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 2 ? "refine" : "invalid",
     explanation:
       forbiddenCount >= 4
@@ -303,7 +304,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   dims.push({
     key: "taskIndependence",
     label: "Task independence",
-    step: 9,
+    step: 6,
     verdict: taskLeak ? "invalid" : "strong",
     explanation: taskLeak
       ? "Profile is bound to a specific task or flow."
@@ -314,7 +315,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   dims.push({
     key: "reusability",
     label: "Reusability",
-    step: 9,
+    step: 6,
     verdict:
       roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak ? "strong" : "refine",
     explanation:
@@ -331,7 +332,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   dims.push({
     key: "readiness",
     label: "Simulation readiness",
-    step: 5,
+    step: 4,
     verdict: readiness,
     explanation:
       readiness === "strong"

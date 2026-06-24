@@ -38,15 +38,12 @@ export default function App() {
       c.researched || c.researchMode === "skip" || !!(c.clientName || c.manualDescription),
       profile.role.selected.length > 0,
       !!profile.expertise.domainExpertise,
-      count(profile.decisionBehavior) > 0,
-      count(profile.informationNeeds) > 0,
-      count(profile.forbiddenAssumptions) > 0,
-      count(profile.frictionTriggers) > 0,
-      count(profile.emotionalBehavior) > 0,
-      count(profile.abandonmentRules) > 0,
+      count(profile.decisionBehavior) > 0 || count(profile.emotionalBehavior) > 0, // Behavior & trust
+      count(profile.informationNeeds) > 0 || count(profile.forbiddenAssumptions) > 0, // Information & limits
+      count(profile.frictionTriggers) > 0 || count(profile.abandonmentRules) > 0, // Friction & breaking points
       profile.taskSuitability.suitable.length + profile.taskSuitability.customSuitable.length > 0,
-      visited.has(10),
-      visited.has(11),
+      visited.has(7), // Validation
+      visited.has(8), // Export
     ],
     [profile, c, visited]
   );

@@ -68,8 +68,8 @@ export default function LiveProfilePreview({ activeStep }: { activeStep: number 
   const cp = profileCompleteness(p);
   const all = (s: { selected: string[] }) => Array.from(new Set(s.selected));
 
-  // Sections light up for the step they belong to; on review/export (>=10) nothing dims.
-  const focusActive = activeStep <= 9;
+  // Sections light up for the step they belong to; on validation/export nothing dims.
+  const focusActive = activeStep <= 6;
   const dimFor = (relatedStep: number) => focusActive && relatedStep !== activeStep;
 
   const taskLeak = detectTaskLanguage(
@@ -119,22 +119,22 @@ export default function LiveProfilePreview({ activeStep }: { activeStep: number 
           <Field label="This product" value={p.expertise.exactProductFamiliarity} />
         </div>
         <Chips label="Decision behavior" items={all(p.decisionBehavior)} dim={dimFor(3)} />
+        <Chips label="Emotional & trust" items={all(p.emotionalBehavior)} dim={dimFor(3)} />
         <Chips label="Information needs" items={all(p.informationNeeds)} dim={dimFor(4)} />
-        <Chips label="Constraints" items={all(p.constraints)} dim={dimFor(5)} />
-        <Chips label="Forbidden assumptions" items={all(p.forbiddenAssumptions)} tone="var(--color-action)" dim={dimFor(5)} />
-        <Chips label="Friction triggers" items={all(p.frictionTriggers)} tone="var(--color-risk)" dim={dimFor(6)} />
-        <Chips label="Emotional & trust" items={all(p.emotionalBehavior)} dim={dimFor(7)} />
-        <Chips label="Abandonment & escalation" items={all(p.abandonmentRules)} dim={dimFor(8)} />
+        <Chips label="Constraints" items={all(p.constraints)} dim={dimFor(4)} />
+        <Chips label="Forbidden assumptions" items={all(p.forbiddenAssumptions)} tone="var(--color-action)" dim={dimFor(4)} />
+        <Chips label="Friction triggers" items={all(p.frictionTriggers)} tone="var(--color-risk)" dim={dimFor(5)} />
+        <Chips label="Abandonment & escalation" items={all(p.abandonmentRules)} dim={dimFor(5)} />
         <Chips
           label="Suitable tasks"
           items={[...p.taskSuitability.suitable, ...p.taskSuitability.customSuitable]}
           tone="var(--color-ok)"
-          dim={dimFor(9)}
+          dim={dimFor(6)}
         />
         <Chips
           label="Unsuitable tasks"
           items={[...p.taskSuitability.unsuitable, ...p.taskSuitability.customUnsuitable]}
-          dim={dimFor(9)}
+          dim={dimFor(6)}
         />
 
         {(taskLeak || p.forbiddenAssumptions.selected.length === 0) && (
