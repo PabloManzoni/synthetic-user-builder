@@ -13,8 +13,12 @@ import type {
   ExpertiseSlice,
   TaskSuitabilitySlice,
 } from "./types";
+import { randomProfileName } from "../lib/random";
 
 const emptyOption = (): OptionSlice => ({ selected: [], custom: [], generated: "" });
+
+/** Fresh profile with a pre-filled random name so the field is never empty. */
+const makeInitial = (): SyntheticProfile => ({ ...initialProfile, profileName: randomProfileName() });
 
 const initialProfile: SyntheticProfile = {
   profileName: "",
@@ -128,7 +132,7 @@ function reducer(state: SyntheticProfile, action: Action): SyntheticProfile {
         },
       };
     case "reset":
-      return initialProfile;
+      return makeInitial();
     default:
       return state;
   }
@@ -146,11 +150,14 @@ export const DRAFT_KEY = "synthetic-user-builder.draft";
 function loadDraft(): SyntheticProfile {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
-    if (raw) return { ...initialProfile, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...initialProfile, ...parsed, profileName: parsed.profileName || randomProfileName() };
+    }
   } catch {
     /* ignore corrupt draft */
   }
-  return initialProfile;
+  return makeInitial();
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
