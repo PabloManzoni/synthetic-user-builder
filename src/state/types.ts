@@ -107,9 +107,24 @@ export interface ValidationResult {
   suggestedFixes: { label: string; assumption: string }[];
 }
 
+/** Rich narrative written by AI from the user's selections ("Complete with AI"). */
+export interface GeneratedProfile {
+  primaryMotivation: string;
+  decisionStyle: string;
+  attentionPattern: string;
+  trustPattern: string;
+  behaviorUnderPressure: string;
+  toleranceForAmbiguity: string;
+  commonWrongAssumptions: string[];
+  calibrationNotes: string;
+  unsuitableTaskTypes: string[];
+}
+
 export interface SyntheticProfile {
   profileName: string;
   primaryMotivation: string;
+  /** Set by "Complete with AI"; export prefers these when present. */
+  generated: GeneratedProfile | null;
   productContext: ProductContext;
   role: RoleSlice;
   expertise: ExpertiseSlice;

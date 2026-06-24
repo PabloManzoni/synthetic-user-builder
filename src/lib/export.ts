@@ -10,36 +10,47 @@ const lines = (text: string) =>
     .map((l) => l.replace(/^[•\-]\s*/, "").trim())
     .filter(Boolean);
 
-// Derived narrative fields (heuristic, deterministic). User can edit after export.
+// Narrative fields. Prefers AI-generated prose (from "Complete with AI") when
+// present; otherwise falls back to deterministic, heuristic text.
 function derive(p: SyntheticProfile) {
+  const g = p.generated;
   const beh = list(p.decisionBehavior).join(" ").toLowerCase();
   const has = (s: string) => beh.includes(s);
   return {
+    primaryMotivation: g?.primaryMotivation || p.primaryMotivation,
     decisionStyle:
+      g?.decisionStyle ||
       p.decisionBehavior.generated ||
-      (list(p.decisionBehavior).length
-        ? list(p.decisionBehavior).join("; ")
-        : "Not specified."),
+      (list(p.decisionBehavior).length ? list(p.decisionBehavior).join("; ") : "Not specified."),
     attentionPattern:
-      has("scan") || has("quick")
+      g?.attentionPattern ||
+      (has("scan") || has("quick")
         ? "Reads headings, labels, alerts and visible values first. Does not inspect every detail unless something looks inconsistent or blocks the decision."
-        : "Reads the available information before acting.",
+        : "Reads the available information before acting."),
     trustPattern:
-      has("trust") || has("distrust")
+      g?.trustPattern ||
+      (has("trust") || has("distrust")
         ? "Initially trusts the tool when information is presented clearly. Trust drops when status, severity or timestamps are ambiguous."
-        : "Trust depends on how clearly the interface communicates state.",
+        : "Trust depends on how clearly the interface communicates state."),
     behaviorUnderPressure:
-      has("pressure") || has("speed")
+      g?.behaviorUnderPressure ||
+      (has("pressure") || has("speed")
         ? "Acts on the first signal that looks actionable. Rarely double-checks unless the interface makes uncertainty obvious."
-        : "Slows down and looks for confirmation before acting.",
+        : "Slows down and looks for confirmation before acting."),
     toleranceForAmbiguity:
-      list(p.frictionTriggers).length >= 4
+      g?.toleranceForAmbiguity ||
+      (list(p.frictionTriggers).length >= 4
         ? "Low. Missing detail that affects whether action is required erodes confidence quickly."
-        : "Low to medium. Can handle some missing detail, but not when it affects the decision.",
-    commonWrongAssumptions: list(p.forbiddenAssumptions).map((a) => {
-      const tail = a.replace(/^cannot\s+/i, "").trim();
-      return `May ${tail}`;
-    }),
+        : "Low to medium. Can handle some missing detail, but not when it affects the decision."),
+    commonWrongAssumptions:
+      g?.commonWrongAssumptions?.length
+        ? g.commonWrongAssumptions
+        : list(p.forbiddenAssumptions).map((a) => `May ${a.replace(/^cannot\s+/i, "").trim()}`),
+    calibrationNotes: g?.calibrationNotes || p.productContext.aiSummary,
+    unsuitableTaskTypes: (() => {
+      const picked = [...p.taskSuitability.unsuitable, ...p.taskSuitability.customUnsuitable];
+      return picked.length ? picked : g?.unsuitableTaskTypes ?? [];
+    })(),
   };
 }
 
@@ -64,7 +75,7 @@ export function toMarkdown(p: SyntheticProfile): string {
     sec("Technical proficiency", e.technicalProficiency),
     sec("Product type familiarity", e.productTypeFamiliarity),
     sec("Exact product familiarity", e.exactProductFamiliarity),
-    sec("Primary motivation", p.primaryMotivation),
+    sec("Primary motivation", d.primaryMotivation),
     sec("Decision style", d.decisionStyle),
     sec("Attention pattern", d.attentionPattern),
     sec("Trust pattern", d.trustPattern),
@@ -78,8 +89,8 @@ export function toMarkdown(p: SyntheticProfile): string {
     sec("Abandonment and escalation rules", bullets(list(p.abandonmentRules))),
     sec("Forbidden assumptions", bullets(list(p.forbiddenAssumptions))),
     sec("Suitable task types", bullets([...p.taskSuitability.suitable, ...p.taskSuitability.customSuitable])),
-    sec("Unsuitable task types", bullets([...p.taskSuitability.unsuitable, ...p.taskSuitability.customUnsuitable])),
-    sec("Calibration notes", p.productContext.aiSummary),
+    sec("Unsuitable task types", bullets(d.unsuitableTaskTypes)),
+    sec("Calibration notes", d.calibrationNotes),
     sec("Profile quality check", v.overall === "strong" ? "Strong" : v.overall === "refine" ? "Needs refinement" : "Invalid"),
     sec("Validation notes", bullets(v.issues.length ? v.issues : ["No blocking issues detected."])),
   ].join("\n");
@@ -98,7 +109,7 @@ export function toJsonObject(p: SyntheticProfile) {
     technicalProficiency: p.expertise.technicalProficiency,
     productTypeFamiliarity: p.expertise.productTypeFamiliarity,
     exactProductFamiliarity: p.expertise.exactProductFamiliarity,
-    primaryMotivation: p.primaryMotivation,
+    primaryMotivation: d.primaryMotivation,
     decisionStyle: d.decisionStyle,
     attentionPattern: d.attentionPattern,
     trustPattern: d.trustPattern,
@@ -112,8 +123,8 @@ export function toJsonObject(p: SyntheticProfile) {
     abandonmentAndEscalationRules: list(p.abandonmentRules),
     forbiddenAssumptions: list(p.forbiddenAssumptions),
     suitableTaskTypes: [...p.taskSuitability.suitable, ...p.taskSuitability.customSuitable],
-    unsuitableTaskTypes: [...p.taskSuitability.unsuitable, ...p.taskSuitability.customUnsuitable],
-    calibrationNotes: p.productContext.aiSummary,
+    unsuitableTaskTypes: d.unsuitableTaskTypes,
+    calibrationNotes: d.calibrationNotes,
     validation: {
       profileQuality: verdict("completeness"),
       riskOfOverguidance: verdict("overguidance"),

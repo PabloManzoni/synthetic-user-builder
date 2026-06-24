@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useProfile } from "../state/profileStore";
 import { toMarkdown, toJson, toPromptBlock, download } from "../lib/export";
+import { completeProfile } from "../ai/aiClient";
+import WarningBanner from "./WarningBanner";
 
 type Format = "markdown" | "json" | "prompt";
 
@@ -11,9 +13,23 @@ const tabs: { key: Format; label: string }[] = [
 ];
 
 export default function ExportPanel() {
-  const { profile } = useProfile();
+  const { profile, dispatch } = useProfile();
   const [format, setFormat] = useState<Format>("markdown");
   const [copied, setCopied] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState(false);
+
+  const runComplete = async () => {
+    setCompleting(true);
+    setCompleteError(false);
+    const result = await completeProfile(profile);
+    if (result) {
+      dispatch({ type: "setGeneratedProfile", value: result });
+    } else {
+      setCompleteError(true);
+    }
+    setCompleting(false);
+  };
 
   const content =
     format === "markdown" ? toMarkdown(profile) : format === "json" ? toJson(profile) : toPromptBlock(profile);
@@ -31,6 +47,41 @@ export default function ExportPanel() {
 
   return (
     <div className="space-y-4">
+      <div
+        className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+        style={{
+          borderColor: profile.generated ? "var(--color-ok)" : "var(--color-info)",
+          background: "var(--color-surface-2)",
+        }}
+      >
+        <div>
+          <div className="text-[13px] font-medium text-[var(--color-ink)]">
+            {profile.generated ? "Profile enriched by AI ✓" : "Complete the profile with AI"}
+          </div>
+          <div className="text-[11px] text-[var(--color-ink-faint)]">
+            {profile.generated
+              ? "Narrative written by Gemini. Re-run to regenerate."
+              : "Gemini writes the rich narrative and fills empty fields from your selections."}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={runComplete}
+          disabled={completing}
+          className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60"
+          style={{ background: "var(--color-accent)", color: "#0b0d10" }}
+        >
+          {completing ? "Writing…" : profile.generated ? "↻ Re-generate" : "✨ Complete with AI"}
+        </button>
+      </div>
+
+      {completeError && (
+        <WarningBanner tone="warn">
+          AI completion is unavailable right now (no key or a transient error). The export still works with the
+          deterministic text below.
+        </WarningBanner>
+      )}
+
       <div className="flex gap-1 rounded-lg border p-1" style={{ borderColor: "var(--color-border)" }}>
         {tabs.map((t) => (
           <button

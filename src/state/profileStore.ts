@@ -23,6 +23,7 @@ const makeInitial = (): SyntheticProfile => ({ ...initialProfile, profileName: r
 const initialProfile: SyntheticProfile = {
   profileName: "",
   primaryMotivation: "",
+  generated: null,
   productContext: {
     clientName: "",
     productName: "",
@@ -73,6 +74,7 @@ type OptionKey =
 
 type Action =
   | { type: "patchTop"; patch: Partial<Pick<SyntheticProfile, "profileName" | "primaryMotivation">> }
+  | { type: "setGeneratedProfile"; value: SyntheticProfile["generated"] }
   | { type: "patchProductContext"; patch: Partial<ProductContext> }
   | { type: "patchRole"; patch: Partial<RoleSlice> }
   | { type: "patchExpertise"; patch: Partial<ExpertiseSlice> }
@@ -92,6 +94,8 @@ function reducer(state: SyntheticProfile, action: Action): SyntheticProfile {
   switch (action.type) {
     case "patchTop":
       return { ...state, ...action.patch };
+    case "setGeneratedProfile":
+      return { ...state, generated: action.value };
     case "patchProductContext":
       return { ...state, productContext: { ...state.productContext, ...action.patch } };
     case "patchRole":
