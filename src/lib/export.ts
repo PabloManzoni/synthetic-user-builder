@@ -97,7 +97,16 @@ export function toMarkdown(p: SyntheticProfile): string {
     sec("Suitable task types", bullets([...p.taskSuitability.suitable, ...p.taskSuitability.customSuitable])),
     sec("Unsuitable task types", bullets(d.unsuitableTaskTypes)),
     sec("Calibration notes", d.calibrationNotes),
-    sec("Profile quality check", v.overall === "strong" ? "Strong" : v.overall === "refine" ? "Needs refinement" : "Invalid"),
+    sec(
+      "Profile quality check",
+      v.overall === "strong"
+        ? "Strong"
+        : v.overall === "invalid"
+          ? "Invalid"
+          : v.overall === "incomplete"
+            ? "Incomplete"
+            : "Needs refinement"
+    ),
     sec("Validation notes", bullets(v.issues.length ? v.issues : ["No blocking issues detected."])),
   ].join("\n");
 }

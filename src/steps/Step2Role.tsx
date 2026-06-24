@@ -188,7 +188,7 @@ export default function Step2Role() {
           value={customDesc}
           onChange={(e) => setCustomDesc(e.target.value)}
           placeholder="What does this role usually do? (relationship to the domain, not a task)"
-          rows={2}
+          rows={3}
           className="w-full rounded-lg border bg-[var(--color-surface-2)] px-3 py-2.5 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]"
           style={{ borderColor: "var(--color-border)" }}
         />
@@ -227,7 +227,7 @@ export default function Step2Role() {
             <textarea
               value={profile.primaryMotivation}
               onChange={(e) => dispatch({ type: "patchTop", patch: { primaryMotivation: e.target.value } })}
-              rows={2}
+              rows={3}
               placeholder="What is this user ultimately trying to achieve?"
               className="w-full rounded-lg border bg-[var(--color-surface-2)] px-3 py-2.5 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]"
               style={{ borderColor: "var(--color-border)" }}

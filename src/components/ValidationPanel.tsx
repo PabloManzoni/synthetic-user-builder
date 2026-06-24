@@ -7,9 +7,21 @@ import { type Verdict, STEP_TITLES } from "../state/types";
 import WarningBanner from "./WarningBanner";
 
 const color = (v: Verdict) =>
-  v === "strong" ? "var(--color-ok)" : v === "invalid" ? "var(--color-action)" : "var(--color-risk)";
+  v === "strong"
+    ? "var(--color-ok)"
+    : v === "invalid"
+      ? "var(--color-action)"
+      : v === "incomplete"
+        ? "var(--color-ink-faint)"
+        : "var(--color-risk)";
 const label = (v: Verdict) =>
-  v === "strong" ? "Strong" : v === "invalid" ? "Invalid" : "Needs refinement";
+  v === "strong"
+    ? "Strong"
+    : v === "invalid"
+      ? "Invalid"
+      : v === "incomplete"
+        ? "Not filled yet"
+        : "Needs refinement";
 
 export default function ValidationPanel() {
   const { profile, dispatch } = useProfile();

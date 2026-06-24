@@ -136,7 +136,7 @@ export default function OptionStep({
           <textarea
             value={slice.generated}
             onChange={(e) => setGenerated(e.target.value)}
-            rows={Math.min(8, Math.max(3, slice.generated.split("\n").length))}
+            rows={Math.min(12, Math.max(5, slice.generated.split("\n").length))}
             className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-[var(--color-ink)] outline-none"
           />
         </div>

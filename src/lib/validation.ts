@@ -128,7 +128,7 @@ export function detectBackendKnowledge(text: string): boolean {
 // ---- Full profile validation (Step 11) ----
 
 const worst = (a: Verdict, b: Verdict): Verdict => {
-  const order: Verdict[] = ["strong", "refine", "invalid"];
+  const order: Verdict[] = ["strong", "incomplete", "refine", "invalid"];
   return order[Math.max(order.indexOf(a), order.indexOf(b))];
 };
 
@@ -176,7 +176,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "completeness",
     label: "Profile completeness",
     step: 1,
-    verdict: filledSlices >= 9 ? "strong" : "refine",
+    verdict: filledSlices >= 9 ? "strong" : "incomplete",
     explanation:
       filledSlices >= 9
         ? "All core dimensions are filled in."
@@ -189,7 +189,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "roleClarity",
     label: "Role clarity",
     step: 1,
-    verdict: !roleSelected ? "refine" : roleDemographic ? "refine" : "strong",
+    verdict: !roleSelected ? "incomplete" : roleDemographic ? "refine" : "strong",
     explanation: !roleSelected
       ? "No role selected yet."
       : roleDemographic
@@ -204,7 +204,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "constraints",
     label: "Constraint strength",
     step: 4,
-    verdict: constraintCount >= 3 ? "strong" : "refine",
+    verdict: constraintCount >= 3 ? "strong" : constraintCount >= 1 ? "refine" : "incomplete",
     explanation:
       constraintCount >= 3
         ? "Constraints meaningfully bound the agent."
@@ -219,7 +219,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "forbidden",
     label: "Forbidden assumption quality",
     step: 4,
-    verdict: forbiddenCount >= 4 ? "strong" : "refine",
+    verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 1 ? "refine" : "incomplete",
     explanation:
       forbiddenCount >= 4
         ? "Strong set of forbidden assumptions."
@@ -244,10 +244,12 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     label: "Risk of overguidance",
     step: 3,
     // (decision behavior lives in step 3 "Behavior & trust")
-    verdict: taskLeak ? "invalid" : "strong",
+    verdict: taskLeak ? "invalid" : allText.trim() ? "strong" : "incomplete",
     explanation: taskLeak
       ? "Profile contains task or navigation language. Remove product-specific steps."
-      : "No task or navigation steps detected. Profile stays behavioral.",
+      : allText.trim()
+        ? "No task or navigation steps detected. Profile stays behavioral."
+        : "Nothing to check yet — add behavior and constraints.",
   });
   if (taskLeak)
     issues.push("The profile includes task or navigation instructions. It must define behavior, not app steps.");
@@ -258,11 +260,13 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "tooGeneric",
     label: "Risk of being too generic",
     step: 3,
-    verdict: totalSignals >= 12 ? "strong" : "refine",
+    verdict: totalSignals >= 12 ? "strong" : totalSignals > 0 ? "refine" : "incomplete",
     explanation:
       totalSignals >= 12
         ? "Enough specific behavior to drive distinct simulation."
-        : "Add more specific behavior so the profile isn't too generic.",
+        : totalSignals > 0
+          ? "Add more specific behavior so the profile isn't too generic."
+          : "Add behavior, information needs and constraints to give it substance.",
   });
 
   // 7. Risk of being too smart
@@ -271,7 +275,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "tooSmart",
     label: "Risk of being too smart",
     step: 4,
-    verdict: backend ? "refine" : forbiddenCount >= 3 ? "strong" : "refine",
+    verdict: backend ? "refine" : forbiddenCount >= 3 ? "strong" : forbiddenCount > 0 ? "refine" : "incomplete",
     explanation: backend
       ? "Profile grants internal/backend knowledge the agent should not have."
       : forbiddenCount >= 3
@@ -288,7 +292,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "compensation",
     label: "Risk of compensating for interface gaps",
     step: 4,
-    verdict: forbiddenCount >= 4 ? "strong" : "refine",
+    verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 1 ? "refine" : "incomplete",
     explanation:
       forbiddenCount >= 4
         ? "Forbidden assumptions prevent the agent from filling gaps the UI leaves."
@@ -305,10 +309,12 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "taskIndependence",
     label: "Task independence",
     step: 6,
-    verdict: taskLeak ? "invalid" : "strong",
+    verdict: taskLeak ? "invalid" : allText.trim() ? "strong" : "incomplete",
     explanation: taskLeak
       ? "Profile is bound to a specific task or flow."
-      : "Profile is independent of any specific task.",
+      : allText.trim()
+        ? "Profile is independent of any specific task."
+        : "Add behavior so independence can be assessed.",
   });
 
   // 10. Reusability
@@ -317,7 +323,11 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     label: "Reusability",
     step: 6,
     verdict:
-      roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak ? "strong" : "refine",
+      roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak
+        ? "strong"
+        : !roleSelected && p.taskSuitability.suitable.length === 0
+          ? "incomplete"
+          : "refine",
     explanation:
       roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak
         ? "Reusable across multiple tasks of the suitable types."
@@ -325,10 +335,11 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   });
 
   // 11. Simulation readiness
-  const readiness = worst(
-    forbiddenCount >= 3 ? "strong" : "refine",
-    worst(taskLeak ? "invalid" : "strong", totalSignals >= 10 ? "strong" : "refine")
-  );
+  const readiness: Verdict = taskLeak
+    ? "invalid"
+    : totalSignals === 0 && forbiddenCount === 0
+      ? "incomplete"
+      : worst(forbiddenCount >= 3 ? "strong" : "refine", totalSignals >= 10 ? "strong" : "refine");
   dims.push({
     key: "readiness",
     label: "Simulation readiness",
@@ -339,7 +350,9 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
         ? "Ready to pair with a separate task objective in a simulation."
         : readiness === "invalid"
           ? "Not ready: remove task language and strengthen constraints."
-          : "Almost ready: harden constraints and add specific behavior.",
+          : readiness === "incomplete"
+            ? "Fill in behavior and constraints to assess readiness."
+            : "Almost ready: harden constraints and add specific behavior.",
   });
 
   const overall = dims.reduce<Verdict>((acc, d) => worst(acc, d.verdict), "strong");

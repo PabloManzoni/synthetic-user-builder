@@ -90,7 +90,7 @@ export default function Step3Expertise() {
           <textarea
             value={e.interpretation}
             onChange={(ev) => patch({ interpretation: ev.target.value })}
-            rows={4}
+            rows={6}
             className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-[var(--color-ink)] outline-none"
           />
         </div>

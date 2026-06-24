@@ -106,7 +106,7 @@ export default function Step1ProductContext() {
 
       <div>
         <Labeled label="Product description">
-          <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={5} value={c.manualDescription}
+          <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={7} value={c.manualDescription}
                     onChange={(e) => patch({ manualDescription: e.target.value })}
                     placeholder={"Describe the product, or paste its website, links and any details…\n\ne.g. https://comptrain.co — CrossFit programming & gym management: classes, athlete tracking, leaderboards"} />
         </Labeled>
@@ -209,7 +209,7 @@ export default function Step1ProductContext() {
                 </div>
                 <textarea
                   className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-[var(--color-ink)] outline-none"
-                  rows={4}
+                  rows={6}
                   value={c.aiSummary}
                   onChange={(e) => patch({ aiSummary: e.target.value })}
                 />

@@ -92,7 +92,7 @@ export interface TaskSuitabilitySlice {
   customUnsuitable: string[];
 }
 
-export type Verdict = "strong" | "refine" | "invalid";
+export type Verdict = "strong" | "refine" | "invalid" | "incomplete";
 
 export interface ValidationDimension {
   key: string;
