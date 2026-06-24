@@ -53,6 +53,10 @@ export interface ResearchResult {
   confidence: "low" | "medium" | "high" | null;
   roles: SuggestedRole[];
   failed: boolean;
+  /** Inferred field values; the UI fills empty fields with these. */
+  description: string;
+  primaryUsers: string;
+  riskAreas: string;
 }
 
 /** Simulates public-context research. Returns a Promise to feel real. */
@@ -66,22 +70,38 @@ export function research(c: ProductContext): Promise<ResearchResult> {
           confidence: SMARTSENSE_CONFIDENCE,
           roles: SMARTSENSE_ROLES,
           failed: false,
+          description:
+            "IoT temperature, humidity and location monitoring with digital food-safety " +
+            "checklists and real-time alerting across sites and in-transit shipments.",
+          primaryUsers:
+            "Cold-chain operations coordinators, multi-site compliance managers, " +
+            "food-safety / QA reviewers, and field technicians.",
+          riskAreas:
+            "Temperature excursions and spoilage, missed or ambiguous alerts, unconfirmed " +
+            "incident status, and compliance gaps (HACCP / FDA).",
         });
         return;
       }
       const text = contextText(c).trim();
       if (text.length < 3) {
-        resolve({ summary: "", confidence: null, roles: [], failed: true });
+        resolve({
+          summary: "",
+          confidence: null,
+          roles: [],
+          failed: true,
+          description: "",
+          primaryUsers: "",
+          riskAreas: "",
+        });
         return;
       }
       // We have *some* text but no reliable public match: infer cautiously.
-      const label = c.productName || c.clientName || c.businessDomain || "this product";
+      const label = c.productName || c.clientName || "this product";
       resolve({
         summary:
           `We could not find reliable public information about ${label}. ` +
-          `Based only on what you entered, it appears to involve ` +
-          `${c.businessDomain || "an operational workflow"}. Please edit this summary ` +
-          `or describe the product manually.`,
+          `Based only on what you entered, it appears to support an operational workflow. ` +
+          `Please edit these fields to describe the product.`,
         confidence: "low",
         roles: GENERIC_ROLES.slice(0, 6).map((name) => ({
           name,
@@ -91,6 +111,9 @@ export function research(c: ProductContext): Promise<ResearchResult> {
           confidence: "low" as const,
         })),
         failed: false,
+        description: `${label} appears to be an operational tool — edit this to describe what it does.`,
+        primaryUsers: "Operational staff who make decisions from on-screen information.",
+        riskAreas: "Acting on missing, ambiguous, or stale information.",
       });
     }, 650);
   });

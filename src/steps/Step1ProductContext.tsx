@@ -58,6 +58,10 @@ export default function Step1ProductContext() {
       aiConfidence: r.confidence,
       researched: true,
       researchFailed: r.failed,
+      // Fill inferred fields, but never overwrite what the user already typed.
+      manualDescription: c.manualDescription || r.description,
+      knownPrimaryUsers: c.knownPrimaryUsers || r.primaryUsers,
+      knownRiskAreas: c.knownRiskAreas || r.riskAreas,
     });
     setLoading(false);
   };
