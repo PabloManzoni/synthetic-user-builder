@@ -159,7 +159,7 @@ export default function App() {
         </aside>
 
         {/* Step body */}
-        <main ref={mainRef} className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
+        <main ref={mainRef} id="step-scroll" className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
           <motion.div
             key={step}
             initial={{ opacity: 0, x: dir * 24 }}

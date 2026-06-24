@@ -95,7 +95,7 @@ export default function Step1ProductContext() {
           style={{ borderColor: "var(--color-border)" }}
           value={profile.profileName}
           onChange={(e) => dispatch({ type: "patchTop", patch: { profileName: e.target.value } })}
-          placeholder="e.g. matthew-a1b2"
+          placeholder="e.g. matthew-reyes-a1e"
         />
       </Labeled>
 
