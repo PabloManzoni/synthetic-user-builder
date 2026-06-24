@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useProfile } from "../state/profileStore";
 import { validateProfile, detectTaskLanguage } from "../lib/validation";
+import { asciiFace } from "../lib/asciiFace";
 
 const dimStyle = (dim: boolean) => ({
   opacity: dim ? 0.28 : 1,
@@ -93,6 +94,19 @@ export default function LiveProfilePreview({ activeStep }: { activeStep: number 
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+        <div className="flex justify-center" style={dimStyle(dimFor(0))}>
+          <motion.pre
+            key={asciiFace(p.profileName)}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+            className="select-none text-[11px] leading-[1.15] text-[var(--color-ink-soft)]"
+            style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
+            aria-hidden
+          >
+            {asciiFace(p.profileName)}
+          </motion.pre>
+        </div>
         <Field label="Profile name" value={p.profileName} dim={dimFor(0)} />
         <div className="space-y-5" style={dimStyle(dimFor(1))}>
           <Field label="Reusable role" value={p.role.selectedRole} />

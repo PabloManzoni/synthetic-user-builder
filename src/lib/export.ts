@@ -1,5 +1,6 @@
 import type { SyntheticProfile } from "../state/types";
 import { validateProfile } from "./validation";
+import { asciiFace } from "./asciiFace";
 
 // `selected` is the source of truth; custom values are already in `selected` once chosen.
 const list = (s: { selected: string[] }) => Array.from(new Set(s.selected));
@@ -52,6 +53,10 @@ export function toMarkdown(p: SyntheticProfile): string {
   return [
     "# Synthetic User Profile",
     "",
+    "```",
+    asciiFace(p.profileName),
+    "```",
+    "",
     sec("Profile name", p.profileName),
     sec("Reusable role", p.role.selectedRole),
     sec("Role summary", p.role.roleDescription),
@@ -86,6 +91,7 @@ export function toJsonObject(p: SyntheticProfile) {
   const verdict = (key: string) => v.dimensions.find((x) => x.key === key)?.verdict ?? "";
   return {
     profileName: p.profileName,
+    asciiFace: asciiFace(p.profileName),
     role: p.role.selectedRole,
     roleSummary: p.role.roleDescription,
     domainExpertise: p.expertise.domainExpertise,
