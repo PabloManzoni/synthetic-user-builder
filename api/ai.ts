@@ -15,8 +15,8 @@ async function geminiJSON(
 ): Promise<{ ok: true; data: any } | { ok: false; status: number }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { ok: false, status: 503 };
-  const primary = process.env.GEMINI_MODEL || "gemini-2.0-flash";
-  const models = Array.from(new Set([primary, "gemini-2.5-flash", "gemini-1.5-flash"]));
+  const primary = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const models = Array.from(new Set([primary, "gemini-2.0-flash"]));
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   let lastStatus = 503;
   for (const model of models) {
