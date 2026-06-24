@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useProfile } from "../state/profileStore";
 import { suggestSuitableTasks, recommendedFor } from "../ai/mockAi";
+import { refineField } from "../ai/aiClient";
 import { GENERIC_SUITABLE_TASKS, GENERIC_UNSUITABLE_TASKS } from "../ai/genericOptions";
 import SelectableOption from "../components/SelectableOption";
 import CustomOptionInput from "../components/CustomOptionInput";
@@ -10,6 +12,21 @@ export default function Step10TaskSuitability() {
   const { profile, dispatch } = useProfile();
   const t = profile.taskSuitability;
   const aiSuitable = suggestSuitableTasks(profile.productContext);
+  const [regenerating, setRegenerating] = useState(false);
+
+  const regenerateSuitable = async () => {
+    setRegenerating(true);
+    const res = await refineField(profile, "suitableTasks");
+    if (res?.suggestions) {
+      dispatch({
+        type: "setCategorySuggestions",
+        category: "suitableTasks",
+        suggestions: res.suggestions,
+        recommended: res.recommended ?? [],
+      });
+    }
+    setRegenerating(false);
+  };
 
   const toggle = (field: "suitable" | "unsuitable", value: string) =>
     dispatch({ type: "toggleTask", field, value });
@@ -27,6 +44,18 @@ export default function Step10TaskSuitability() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold" style={{ color: "var(--color-ok)" }}>Suitable task types</h3>
+          <div className="flex items-center gap-3">
+          {aiSuitable.length > 0 && (
+            <button
+              type="button"
+              onClick={regenerateSuitable}
+              disabled={regenerating}
+              className="text-[11px] font-medium text-[var(--color-info)] hover:underline disabled:opacity-60"
+              title="Re-query using everything you've chosen so far"
+            >
+              {regenerating ? "Regenerating…" : "↻ Regenerate"}
+            </button>
+          )}
           {aiSuitable.length > 0 && (
             <AiFillButton
               variant="ai"
@@ -40,6 +69,7 @@ export default function Step10TaskSuitability() {
               }}
             />
           )}
+          </div>
         </div>
         {aiSuitable.length > 0 ? (
           <div className="space-y-2">

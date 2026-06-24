@@ -49,6 +49,42 @@ export async function callAi(ctx: ProductContext): Promise<AiResearchResponse | 
   }
 }
 
+export type RefineTarget =
+  | "motivation"
+  | "decisionBehaviors"
+  | "informationNeeds"
+  | "forbiddenAssumptions"
+  | "frictionTriggers"
+  | "emotionalBehaviors"
+  | "abandonmentRules"
+  | "suitableTasks";
+
+export interface RefineResponse {
+  motivation?: string;
+  suggestions?: string[];
+  recommended?: string[];
+}
+
+/** Context-aware refine using the full profile so far. Null if unavailable. */
+export async function refineField(
+  profile: SyntheticProfile,
+  target: RefineTarget
+): Promise<RefineResponse | null> {
+  try {
+    const res = await fetch("/api/refine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile, target }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as RefineResponse;
+    if (!data || (!data.motivation && !Array.isArray(data.suggestions))) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 /** "Complete with AI": returns the rich narrative, or null if unavailable. */
 export async function completeProfile(profile: SyntheticProfile): Promise<GeneratedProfile | null> {
   try {

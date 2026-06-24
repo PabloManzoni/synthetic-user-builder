@@ -24,6 +24,7 @@ export default function OptionGroup({
   onRemoveCustom,
   onRegenerate,
   onSelectForMe,
+  regenerating = false,
   type = "checkbox",
   customPlaceholder = "Add your own…",
   aiEmptyHint,
@@ -37,6 +38,7 @@ export default function OptionGroup({
   onRemoveCustom: (value: string) => void;
   onRegenerate?: () => void;
   onSelectForMe?: () => void;
+  regenerating?: boolean;
   type?: "checkbox" | "radio";
   customPlaceholder?: string;
   aiEmptyHint?: React.ReactNode;
@@ -55,9 +57,11 @@ export default function OptionGroup({
                 <button
                   type="button"
                   onClick={onRegenerate}
-                  className="text-[11px] font-medium text-[var(--color-info)] hover:underline"
+                  disabled={regenerating}
+                  className="text-[11px] font-medium text-[var(--color-info)] hover:underline disabled:opacity-60"
+                  title="Re-query using everything you've chosen so far"
                 >
-                  ↻ Regenerate
+                  {regenerating ? "Regenerating…" : "↻ Regenerate"}
                 </button>
               )}
             </span>

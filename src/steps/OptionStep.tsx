@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
-import { useProfile, type OptionKey } from "../state/profileStore";
+import { useEffect, useRef, useState } from "react";
+import { useProfile, type OptionKey, type SuggestionCategory } from "../state/profileStore";
 import { useOptionStep } from "../lib/useOptionStep";
 import OptionGroup from "../components/OptionGroup";
 import WarningBanner from "../components/WarningBanner";
 import { recommendedFor } from "../ai/mockAi";
+import { refineField } from "../ai/aiClient";
 import type { ProductContext } from "../state/types";
 
 // Map the step's slice key to the AI suggestion category for "Select for me".
@@ -37,10 +38,28 @@ export default function OptionStep({
   warnIfEmpty?: string;
   aiEmptyHint?: React.ReactNode;
 }) {
-  const { profile } = useProfile();
+  const { profile, dispatch } = useProfile();
   const { slice, selected, custom, toggle, addCustom, removeCustom, setGenerated, setSelected } =
     useOptionStep(stepKey);
   const aiOptions = aiSuggest(profile.productContext);
+  const [regenerating, setRegenerating] = useState(false);
+
+  // Context-aware regenerate: re-query Gemini using everything chosen so far.
+  const regenerate = async () => {
+    const cat = RECO_KEY[stepKey] as SuggestionCategory | undefined;
+    if (!cat) return;
+    setRegenerating(true);
+    const res = await refineField(profile, cat);
+    if (res?.suggestions) {
+      dispatch({
+        type: "setCategorySuggestions",
+        category: cat,
+        suggestions: res.suggestions,
+        recommended: res.recommended ?? [],
+      });
+    }
+    setRegenerating(false);
+  };
 
   // Keep generated text in sync with selections, but never clobber manual edits.
   // Generate only from selected values (custom chips count once they are selected).
@@ -80,7 +99,8 @@ export default function OptionStep({
         onAddCustom={addCustom}
         onRemoveCustom={removeCustom}
         onSelectForMe={aiOptions.length > 0 ? selectForMe : undefined}
-        onRegenerate={() => { /* mock: suggestions are deterministic per context */ }}
+        onRegenerate={RECO_KEY[stepKey] ? regenerate : undefined}
+        regenerating={regenerating}
         customPlaceholder={customPlaceholder}
         aiEmptyHint={aiEmptyHint}
       />

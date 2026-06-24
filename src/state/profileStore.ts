@@ -12,10 +12,40 @@ import type {
   RoleSlice,
   ExpertiseSlice,
   TaskSuitabilitySlice,
+  AiSuggestions,
 } from "./types";
 import { randomProfileName } from "../lib/random";
 
 const emptyOption = (): OptionSlice => ({ selected: [], custom: [], generated: "" });
+
+export type SuggestionCategory =
+  | "decisionBehaviors"
+  | "informationNeeds"
+  | "forbiddenAssumptions"
+  | "frictionTriggers"
+  | "emotionalBehaviors"
+  | "abandonmentRules"
+  | "suitableTasks";
+
+const emptyAiSuggestions = (): AiSuggestions => ({
+  roles: [],
+  decisionBehaviors: [],
+  informationNeeds: [],
+  forbiddenAssumptions: [],
+  frictionTriggers: [],
+  emotionalBehaviors: [],
+  abandonmentRules: [],
+  suitableTasks: [],
+  recommended: {
+    decisionBehaviors: [],
+    informationNeeds: [],
+    forbiddenAssumptions: [],
+    frictionTriggers: [],
+    emotionalBehaviors: [],
+    abandonmentRules: [],
+    suitableTasks: [],
+  },
+});
 
 /** Fresh profile with a pre-filled random name so the field is never empty. */
 const makeInitial = (): SyntheticProfile => ({ ...initialProfile, profileName: randomProfileName() });
@@ -76,6 +106,7 @@ type Action =
   | { type: "patchTop"; patch: Partial<Pick<SyntheticProfile, "profileName" | "primaryMotivation">> }
   | { type: "setGeneratedProfile"; value: SyntheticProfile["generated"] }
   | { type: "patchProductContext"; patch: Partial<ProductContext> }
+  | { type: "setCategorySuggestions"; category: SuggestionCategory; suggestions: string[]; recommended: string[] }
   | { type: "toggleRole"; name: string; description: string }
   | { type: "addCustomRole"; name: string; description: string }
   | { type: "removeCustomRole"; name: string }
@@ -100,6 +131,19 @@ function reducer(state: SyntheticProfile, action: Action): SyntheticProfile {
       return { ...state, generated: action.value };
     case "patchProductContext":
       return { ...state, productContext: { ...state.productContext, ...action.patch } };
+    case "setCategorySuggestions": {
+      const cur = state.productContext.aiSuggestions ?? emptyAiSuggestions();
+      const recommended = { ...(cur.recommended ?? emptyAiSuggestions().recommended!) };
+      recommended[action.category] = action.recommended;
+      return {
+        ...state,
+        productContext: {
+          ...state.productContext,
+          aiSuggestions: { ...cur, [action.category]: action.suggestions, recommended },
+          aiSource: "ai",
+        },
+      };
+    }
     case "toggleRole":
       return {
         ...state,

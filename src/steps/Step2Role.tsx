@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useProfile } from "../state/profileStore";
 import { suggestRoles, generatePrimaryMotivation } from "../ai/mockAi";
+import { refineField } from "../ai/aiClient";
 import { GENERIC_ROLES } from "../ai/genericOptions";
 import { detectDemographicOnly } from "../lib/validation";
 import WarningBanner from "../components/WarningBanner";
@@ -14,10 +15,20 @@ export default function Step2Role() {
   const aiRoles = suggestRoles(profile.productContext);
   const [customName, setCustomName] = useState("");
   const [customDesc, setCustomDesc] = useState("");
+  const [fillingMotivation, setFillingMotivation] = useState(false);
 
   const toggleRole = (name: string, description: string) =>
     dispatch({ type: "toggleRole", name, description });
   const isOn = (name: string) => r.selected.includes(name);
+
+  // Context-aware: real Gemini using the full profile so far, with mock fallback.
+  const fillMotivation = async () => {
+    setFillingMotivation(true);
+    const res = await refineField(profile, "motivation");
+    const value = res?.motivation || generatePrimaryMotivation(r.selected[0] || "", profile.productContext);
+    dispatch({ type: "patchTop", patch: { primaryMotivation: value } });
+    setFillingMotivation(false);
+  };
 
   const RoleCard = ({ role }: { role: SuggestedRole }) => {
     const active = isOn(role.name);
@@ -188,13 +199,8 @@ export default function Step2Role() {
               <span className="text-[12px] font-medium text-[var(--color-ink-soft)]">Primary motivation</span>
               <AiFillButton
                 variant="ai"
-                label="Fill with AI"
-                onClick={() =>
-                  dispatch({
-                    type: "patchTop",
-                    patch: { primaryMotivation: generatePrimaryMotivation(r.selected[0], profile.productContext) },
-                  })
-                }
+                label={fillingMotivation ? "Writing…" : "Fill with AI"}
+                onClick={fillMotivation}
               />
             </span>
             <textarea
