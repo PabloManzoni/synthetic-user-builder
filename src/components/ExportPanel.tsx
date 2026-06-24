@@ -56,12 +56,12 @@ export default function ExportPanel() {
       >
         <div>
           <div className="text-[13px] font-medium text-[var(--color-ink)]">
-            {profile.generated ? "Profile enriched by AI ✓" : "Complete the profile with AI"}
+            {profile.generated ? "Formatted to the synthetic-user standard ✓" : "Format to the synthetic-user standard"}
           </div>
           <div className="text-[11px] text-[var(--color-ink-faint)]">
             {profile.generated
-              ? "Narrative written by Gemini. Re-run to regenerate."
-              : "Gemini writes the rich narrative and fills empty fields from your selections."}
+              ? "AI rewrote your selections into a consistent, simulation-ready profile. Re-run to regenerate."
+              : "AI rewrites your selections into a clean, consistent profile and fills the empty fields."}
           </div>
         </div>
         <button
@@ -71,7 +71,7 @@ export default function ExportPanel() {
           className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60"
           style={{ background: "var(--color-accent)", color: "#0b0d10" }}
         >
-          {completing ? "Writing…" : profile.generated ? "↻ Re-generate" : "✨ Complete with AI"}
+          {completing ? "Formatting…" : profile.generated ? "↻ Re-run" : "✨ Format to standard"}
         </button>
       </div>
 

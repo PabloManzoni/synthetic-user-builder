@@ -176,11 +176,11 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "completeness",
     label: "Profile completeness",
     step: 1,
-    verdict: filledSlices >= 9 ? "strong" : filledSlices >= 6 ? "refine" : "invalid",
+    verdict: filledSlices >= 9 ? "strong" : "refine",
     explanation:
       filledSlices >= 9
         ? "All core dimensions are filled in."
-        : `${10 - filledSlices} core dimension(s) still empty.`,
+        : `${10 - filledSlices} core dimension(s) still to fill.`,
   });
 
   // 2. Role clarity
@@ -189,9 +189,9 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "roleClarity",
     label: "Role clarity",
     step: 1,
-    verdict: !roleSelected ? "invalid" : roleDemographic ? "refine" : "strong",
+    verdict: !roleSelected ? "refine" : roleDemographic ? "refine" : "strong",
     explanation: !roleSelected
-      ? "No role selected."
+      ? "No role selected yet."
       : roleDemographic
         ? "Role reads as a demographic description, not a decision agent."
         : "Role describes a clear relationship to the domain.",
@@ -204,13 +204,13 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "constraints",
     label: "Constraint strength",
     step: 4,
-    verdict: constraintCount >= 3 ? "strong" : constraintCount >= 1 ? "refine" : "invalid",
+    verdict: constraintCount >= 3 ? "strong" : "refine",
     explanation:
       constraintCount >= 3
         ? "Constraints meaningfully bound the agent."
         : constraintCount >= 1
           ? "Some constraints present; consider adding more."
-          : "No constraints — the agent is unbounded.",
+          : "No constraints yet — add some so the agent stays bounded.",
   });
   if (constraintCount === 0) issues.push("Constraints are too weak. Add what the agent may and may not use.");
 
@@ -219,13 +219,13 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "forbidden",
     label: "Forbidden assumption quality",
     step: 4,
-    verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 1 ? "refine" : "invalid",
+    verdict: forbiddenCount >= 4 ? "strong" : "refine",
     explanation:
       forbiddenCount >= 4
         ? "Strong set of forbidden assumptions."
         : forbiddenCount >= 1
           ? "A few forbidden assumptions; more would harden the profile."
-          : "No forbidden assumptions — the agent will compensate for missing UI information.",
+          : "None yet — add some so the agent doesn't compensate for missing UI info.",
   });
   if (forbiddenCount === 0) {
     issues.push(
@@ -258,11 +258,11 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "tooGeneric",
     label: "Risk of being too generic",
     step: 3,
-    verdict: totalSignals >= 12 ? "strong" : totalSignals >= 6 ? "refine" : "invalid",
+    verdict: totalSignals >= 12 ? "strong" : "refine",
     explanation:
       totalSignals >= 12
         ? "Enough specific behavior to drive distinct simulation."
-        : "Profile may be too generic to produce meaningful behavior.",
+        : "Add more specific behavior so the profile isn't too generic.",
   });
 
   // 7. Risk of being too smart
@@ -288,11 +288,11 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     key: "compensation",
     label: "Risk of compensating for interface gaps",
     step: 4,
-    verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 2 ? "refine" : "invalid",
+    verdict: forbiddenCount >= 4 ? "strong" : "refine",
     explanation:
       forbiddenCount >= 4
         ? "Forbidden assumptions prevent the agent from filling gaps the UI leaves."
-        : "The agent may still guess from domain experience when data is missing.",
+        : "Add forbidden assumptions so the agent doesn't guess when data is missing.",
   });
   if (forbiddenCount >= 1 && forbiddenCount < 4)
     suggestedFixes.push({

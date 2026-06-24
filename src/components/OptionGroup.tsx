@@ -58,6 +58,26 @@ export default function OptionGroup({
   return (
     <div className="space-y-6">
       <section>
+        <GroupHeader title="Custom" />
+        {custom.length > 0 && (
+          <div className="mb-2 space-y-2">
+            {custom.map((o) => (
+              <SelectableOption
+                key={o}
+                label={o}
+                source="custom"
+                type={type}
+                selected={selected.includes(o)}
+                onToggle={() => onToggle(o)}
+                onRemove={() => onRemoveCustom(o)}
+              />
+            ))}
+          </div>
+        )}
+        <CustomOptionInput placeholder={customPlaceholder} onAdd={onAddCustom} />
+      </section>
+
+      <section className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
         <GroupHeader
           title="AI suggested"
           tone="var(--color-info)"
@@ -119,26 +139,6 @@ export default function OptionGroup({
             />
           ))}
         </div>
-      </section>
-
-      <section className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
-        <GroupHeader title="Custom" />
-        {custom.length > 0 && (
-          <div className="mb-2 space-y-2">
-            {custom.map((o) => (
-              <SelectableOption
-                key={o}
-                label={o}
-                source="custom"
-                type={type}
-                selected={selected.includes(o)}
-                onToggle={() => onToggle(o)}
-                onRemove={() => onRemoveCustom(o)}
-              />
-            ))}
-          </div>
-        )}
-        <CustomOptionInput placeholder={customPlaceholder} onAdd={onAddCustom} />
       </section>
     </div>
   );

@@ -63,7 +63,7 @@ export default function ValidationPanel() {
       {v.issues.length > 0 && (
         <div className="space-y-2">
           {v.issues.map((iss) => (
-            <WarningBanner key={iss} tone="danger">
+            <WarningBanner key={iss} tone={/task or navigation/i.test(iss) ? "danger" : "warn"}>
               {iss}
             </WarningBanner>
           ))}

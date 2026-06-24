@@ -91,16 +91,23 @@ export default function Step10TaskSuitability() {
           )}
           </div>
         </div>
-        <GroupLabel label="AI suggested" tone="var(--color-info)" />
-        {aiSuitable.length > 0 ? (
-          <div className="space-y-2">
-            {aiSuitable.map((o) => (
-              <SelectableOption key={o} label={o} source="ai" selected={t.suitable.includes(o)} onToggle={() => toggle("suitable", o)} />
-            ))}
-          </div>
-        ) : (
-          <AiEmptyHint what="AI-suggested task types" />
-        )}
+        <GroupLabel label="Custom" />
+        {t.customSuitable.map((o) => (
+          <SelectableOption key={o} label={o} source="custom" selected onToggle={() => removeCustom("customSuitable", o)} onRemove={() => removeCustom("customSuitable", o)} />
+        ))}
+        <CustomOptionInput placeholder="Other suitable task type…" onAdd={(v) => addCustom("customSuitable", v)} />
+        <div className="border-t pt-4" style={{ borderColor: "var(--color-border)" }}>
+          <GroupLabel label="AI suggested" tone="var(--color-info)" />
+          {aiSuitable.length > 0 ? (
+            <div className="space-y-2">
+              {aiSuitable.map((o) => (
+                <SelectableOption key={o} label={o} source="ai" selected={t.suitable.includes(o)} onToggle={() => toggle("suitable", o)} />
+              ))}
+            </div>
+          ) : (
+            <AiEmptyHint what="AI-suggested task types" />
+          )}
+        </div>
         <div className="border-t pt-4" style={{ borderColor: "var(--color-border)" }}>
           <GroupLabel label="Common" />
           <div className="space-y-2">
@@ -109,29 +116,22 @@ export default function Step10TaskSuitability() {
             ))}
           </div>
         </div>
-        <div className="border-t pt-4" style={{ borderColor: "var(--color-border)" }}>
-          <GroupLabel label="Custom" />
-          {t.customSuitable.map((o) => (
-            <SelectableOption key={o} label={o} source="custom" selected onToggle={() => removeCustom("customSuitable", o)} onRemove={() => removeCustom("customSuitable", o)} />
-          ))}
-          <CustomOptionInput placeholder="Other suitable task type…" onAdd={(v) => addCustom("customSuitable", v)} />
-        </div>
       </section>
 
       <section className="space-y-3">
         <h3 className="text-sm font-semibold text-[var(--color-ink-soft)]">Unsuitable task types</h3>
-        <GroupLabel label="Common" />
-        <div className="space-y-2">
-          {GENERIC_UNSUITABLE_TASKS.map((o) => (
-            <SelectableOption key={o} label={o} source="common" selected={t.unsuitable.includes(o)} onToggle={() => toggle("unsuitable", o)} />
-          ))}
-        </div>
+        <GroupLabel label="Custom" />
+        {t.customUnsuitable.map((o) => (
+          <SelectableOption key={o} label={o} source="custom" selected onToggle={() => removeCustom("customUnsuitable", o)} onRemove={() => removeCustom("customUnsuitable", o)} />
+        ))}
+        <CustomOptionInput placeholder="Other unsuitable task type…" onAdd={(v) => addCustom("customUnsuitable", v)} />
         <div className="border-t pt-4" style={{ borderColor: "var(--color-border)" }}>
-          <GroupLabel label="Custom" />
-          {t.customUnsuitable.map((o) => (
-            <SelectableOption key={o} label={o} source="custom" selected onToggle={() => removeCustom("customUnsuitable", o)} onRemove={() => removeCustom("customUnsuitable", o)} />
-          ))}
-          <CustomOptionInput placeholder="Other unsuitable task type…" onAdd={(v) => addCustom("customUnsuitable", v)} />
+          <GroupLabel label="Common" />
+          <div className="space-y-2">
+            {GENERIC_UNSUITABLE_TASKS.map((o) => (
+              <SelectableOption key={o} label={o} source="common" selected={t.unsuitable.includes(o)} onToggle={() => toggle("unsuitable", o)} />
+            ))}
+          </div>
         </div>
       </section>
     </div>
