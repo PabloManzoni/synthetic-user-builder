@@ -119,14 +119,14 @@ export default function Step1ProductContext() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-4">
         <Labeled label="Primary users" optional>
-          <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownPrimaryUsers}
-                 onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most?" />
+          <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownPrimaryUsers}
+                    onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most? e.g. warehouse staff, drivers, store managers" />
         </Labeled>
         <Labeled label="Risk areas" optional>
-          <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownRiskAreas}
-                 onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if it's misread?" />
+          <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownRiskAreas}
+                    onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if it's misread? e.g. a missed alert, a wrong status" />
         </Labeled>
       </div>
 

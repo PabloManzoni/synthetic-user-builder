@@ -101,13 +101,14 @@ const AGENT_WORDS = [
   "monitor",
 ];
 
-/** A role/summary that only describes a person, not a decision agent. */
+// Whole-word match so "age" doesn't fire inside "manager"/"agent", etc.
+const hasWord = (text: string, words: string[]) =>
+  new RegExp(`\\b(?:${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\b`, "i").test(text);
+
+/** A role/summary that only describes a person, not how they behave. */
 export function detectDemographicOnly(text: string): boolean {
-  const t = text.toLowerCase();
-  if (!t.trim()) return false;
-  const demographic = DEMOGRAPHIC_WORDS.some((w) => t.includes(w));
-  const agentic = AGENT_WORDS.some((w) => t.includes(w));
-  return demographic && !agentic;
+  if (!text.trim()) return false;
+  return hasWord(text, DEMOGRAPHIC_WORDS) && !hasWord(text, AGENT_WORDS);
 }
 
 const BACKEND_KNOWLEDGE = [
