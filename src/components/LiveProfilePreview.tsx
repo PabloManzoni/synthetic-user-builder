@@ -63,7 +63,13 @@ function Chips({
   );
 }
 
-export default function LiveProfilePreview({ activeStep }: { activeStep: number }) {
+export default function LiveProfilePreview({
+  activeStep,
+  onCollapse,
+}: {
+  activeStep: number;
+  onCollapse?: () => void;
+}) {
   const { profile: p } = useProfile();
   const cp = profileCompleteness(p);
   const all = (s: { selected: string[] }) => Array.from(new Set(s.selected));
@@ -78,8 +84,18 @@ export default function LiveProfilePreview({ activeStep }: { activeStep: number 
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b px-5 py-4" style={{ borderColor: "var(--color-border)" }}>
-        <h3 className="text-sm font-semibold text-[var(--color-ink)]">Live profile</h3>
+      <div className="flex items-center justify-between gap-2 border-b px-5 py-4" style={{ borderColor: "var(--color-border)" }}>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            title="Hide live profile"
+            className="text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]"
+          >
+            ›
+          </button>
+        )}
+        <h3 className="mr-auto text-sm font-semibold text-[var(--color-ink)]">Live profile</h3>
         <span
           className="flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
           style={{ background: "var(--color-surface-2)", color: cp.color }}

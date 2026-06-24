@@ -17,6 +17,8 @@ export default function App() {
   const [dir, setDir] = useState(1);
   const [visited, setVisited] = useState<Set<number>>(new Set([0]));
   const [saved, setSaved] = useState(false);
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
   // Reset scroll to the top whenever the step changes.
@@ -103,8 +105,19 @@ export default function App() {
       {/* Body: 3 panes */}
       <div className="flex min-h-0 flex-1">
         {/* Stepper */}
-        <aside className="w-64 shrink-0 overflow-y-auto border-r px-3 py-5" style={{ borderColor: "var(--color-border)" }}>
-          <Stepper current={step} done={done} onJump={go} />
+        <aside
+          className="shrink-0 overflow-y-auto border-r px-3 py-5 transition-[width] duration-200"
+          style={{ borderColor: "var(--color-border)", width: leftCollapsed ? 56 : 256 }}
+        >
+          <button
+            type="button"
+            onClick={() => setLeftCollapsed((v) => !v)}
+            title={leftCollapsed ? "Expand steps" : "Collapse steps"}
+            className={"mb-3 flex w-full items-center rounded-md py-1 text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] " + (leftCollapsed ? "justify-center" : "justify-end px-1")}
+          >
+            {leftCollapsed ? "»" : "«"}
+          </button>
+          <Stepper current={step} done={done} onJump={go} collapsed={leftCollapsed} />
         </aside>
 
         {/* Step body */}
@@ -121,10 +134,24 @@ export default function App() {
           </motion.div>
         </main>
 
-        {/* Live preview */}
-        <aside className="w-80 shrink-0 border-l" style={{ borderColor: "var(--color-border)" }}>
-          <LiveProfilePreview activeStep={step} />
-        </aside>
+        {/* Live preview (collapsible) */}
+        {rightCollapsed ? (
+          <button
+            type="button"
+            onClick={() => setRightCollapsed(false)}
+            title="Show live profile"
+            className="flex w-9 shrink-0 items-center justify-center border-l text-[var(--color-ink-faint)] hover:text-[var(--color-ink)]"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            <span style={{ writingMode: "vertical-rl" }} className="text-[11px] uppercase tracking-wide">
+              ‹ Live profile
+            </span>
+          </button>
+        ) : (
+          <aside className="w-80 shrink-0 border-l" style={{ borderColor: "var(--color-border)" }}>
+            <LiveProfilePreview activeStep={step} onCollapse={() => setRightCollapsed(true)} />
+          </aside>
+        )}
       </div>
 
       {/* Bottom bar */}

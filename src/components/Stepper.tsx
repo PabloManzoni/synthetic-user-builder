@@ -4,10 +4,12 @@ export default function Stepper({
   current,
   done,
   onJump,
+  collapsed = false,
 }: {
   current: number;
   done: boolean[];
   onJump: (i: number) => void;
+  collapsed?: boolean;
 }) {
   return (
     <nav className="flex flex-col gap-0.5" aria-label="Steps">
@@ -19,8 +21,12 @@ export default function Stepper({
             key={title}
             type="button"
             onClick={() => onJump(i)}
-            className="group flex items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors"
-            style={{ background: active ? "var(--color-surface-2)" : "transparent" }}
+            title={collapsed ? `${i + 1}. ${title}` : undefined}
+            className={
+              "group flex items-center gap-3 rounded-lg py-2 text-left transition-colors " +
+              (collapsed ? "justify-center px-0" : "px-2.5")
+            }
+            style={{ background: active && !collapsed ? "var(--color-surface-2)" : "transparent" }}
           >
             <span
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold transition-colors"
@@ -36,12 +42,14 @@ export default function Stepper({
             >
               {complete && !active ? "✓" : i + 1}
             </span>
-            <span
-              className="text-[13px] leading-tight transition-colors"
-              style={{ color: active ? "var(--color-ink)" : "var(--color-ink-soft)" }}
-            >
-              {title}
-            </span>
+            {!collapsed && (
+              <span
+                className="text-[13px] leading-tight transition-colors"
+                style={{ color: active ? "var(--color-ink)" : "var(--color-ink-soft)" }}
+              >
+                {title}
+              </span>
+            )}
           </button>
         );
       })}
