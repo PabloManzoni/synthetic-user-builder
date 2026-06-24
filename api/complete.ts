@@ -6,7 +6,7 @@
 // Key lives only here (GEMINI_API_KEY). Falls back to non-200 → client keeps
 // the deterministic text.
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+import { geminiJSON } from "../geminiCall";
 
 const SYSTEM = `You write a REUSABLE SYNTHETIC USER PROFILE — a constrained decision agent, not a persona.
 You are given the user's selections. Write rich, coherent, second-or-third-person prose for each field.
@@ -65,29 +65,12 @@ export default async function handler(req: any, res: any) {
   }
   try {
     const profile = (typeof req.body === "string" ? JSON.parse(req.body) : req.body) || {};
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
-    const gemini = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt(profile) }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
-      }),
-    });
-    if (!gemini.ok) {
-      res.status(502).json({ error: "gemini_error", status: gemini.status });
+    const r = await geminiJSON(buildPrompt(profile), 0.8);
+    if (!r.ok) {
+      res.status(502).json({ error: "gemini_error", status: r.status });
       return;
     }
-    const data = await gemini.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      res.status(502).json({ error: "bad_json", raw: text.slice(0, 500) });
-      return;
-    }
-    res.status(200).json(parsed);
+    res.status(200).json(r.data);
   } catch (e: any) {
     res.status(500).json({ error: "server_error", message: String(e?.message || e) });
   }

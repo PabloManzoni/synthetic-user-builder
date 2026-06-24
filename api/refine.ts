@@ -8,7 +8,7 @@
 //
 // Key lives only here (GEMINI_API_KEY). Non-200 → client falls back to the mock.
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+import { geminiJSON } from "../geminiCall";
 
 const RULES = `Rules: describe BEHAVIOR and LIMITS, never task/navigation steps (no "click", "open", "go to", "find X").
 Stay consistent with everything already chosen. Keep items short. Output STRICT JSON only.`;
@@ -78,29 +78,12 @@ export default async function handler(req: any, res: any) {
       res.status(400).json({ error: "missing_target" });
       return;
     }
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
-    const gemini = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt(profile || {}, target) }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
-      }),
-    });
-    if (!gemini.ok) {
-      res.status(502).json({ error: "gemini_error", status: gemini.status });
+    const r = await geminiJSON(buildPrompt(profile || {}, target), 0.7);
+    if (!r.ok) {
+      res.status(502).json({ error: "gemini_error", status: r.status });
       return;
     }
-    const data = await gemini.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      res.status(502).json({ error: "bad_json" });
-      return;
-    }
-    res.status(200).json(parsed);
+    res.status(200).json(r.data);
   } catch (e: any) {
     res.status(500).json({ error: "server_error", message: String(e?.message || e) });
   }

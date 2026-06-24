@@ -8,7 +8,7 @@
 // If the key is missing or Gemini errors, this returns a non-200 so the client
 // falls back to the deterministic mock — the app keeps working either way.
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+import { geminiJSON } from "../geminiCall";
 
 const SYSTEM = `You help UX teams define REUSABLE SYNTHETIC USER PROFILES — constrained decision agents, not personas.
 A synthetic user defines HOW someone thinks, decides, hesitates, trusts, doubts, assumes and gives up.
@@ -79,42 +79,19 @@ export default async function handler(req: any, res: any) {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  if (!process.env.GEMINI_API_KEY) {
     res.status(503).json({ error: "no_api_key" });
     return;
   }
 
   try {
     const ctx = (typeof req.body === "string" ? JSON.parse(req.body) : req.body) || {};
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
-
-    const gemini = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt(ctx) }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
-      }),
-    });
-
-    if (!gemini.ok) {
-      const detail = await gemini.text();
-      res.status(502).json({ error: "gemini_error", status: gemini.status, detail: detail.slice(0, 500) });
+    const r = await geminiJSON(buildPrompt(ctx), 0.7);
+    if (!r.ok) {
+      res.status(502).json({ error: "gemini_error", status: r.status });
       return;
     }
-
-    const data = await gemini.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      res.status(502).json({ error: "bad_json", raw: text.slice(0, 500) });
-      return;
-    }
-
-    res.status(200).json(parsed);
+    res.status(200).json(r.data);
   } catch (e: any) {
     res.status(500).json({ error: "server_error", message: String(e?.message || e) });
   }
