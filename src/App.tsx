@@ -148,11 +148,16 @@ export default function App() {
     <div className="flex h-screen flex-col bg-[var(--color-bg)]">
       {/* Header */}
       <header className="flex items-center justify-between border-b px-6 py-3.5" style={{ borderColor: "var(--color-border)" }}>
-        <div className="flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => go(0)}
+          title="Back to step 1"
+          className="flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-80"
+        >
           <span className="flex h-6 w-6 items-center justify-center rounded-md text-[12px] font-bold"
                 style={{ background: "var(--color-accent)", color: "#0b0d10" }}>S</span>
           <h1 className="text-sm font-semibold text-[var(--color-ink)]">Synthetic User Builder</h1>
-        </div>
+        </button>
         <div className="flex items-center gap-4">
           {profile.profileName && (
             <div className="flex items-center gap-2 text-right">
