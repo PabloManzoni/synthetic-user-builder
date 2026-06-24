@@ -15,6 +15,7 @@ import type {
   AiSuggestions,
 } from "./types";
 import { randomProfileName } from "../lib/random";
+import { axisStatements } from "../ai/behaviorAxes";
 
 const emptyOption = (): OptionSlice => ({ selected: [], custom: [], generated: "" });
 
@@ -53,6 +54,7 @@ const makeInitial = (): SyntheticProfile => ({ ...initialProfile, profileName: r
 const initialProfile: SyntheticProfile = {
   profileName: "",
   primaryMotivation: "",
+  behaviorAxes: {},
   generated: null,
   productContext: {
     clientName: "",
@@ -105,6 +107,7 @@ type OptionKey =
 type Action =
   | { type: "patchTop"; patch: Partial<Pick<SyntheticProfile, "profileName" | "primaryMotivation">> }
   | { type: "setGeneratedProfile"; value: SyntheticProfile["generated"] }
+  | { type: "setBehaviorAxis"; key: string; value: number }
   | { type: "patchProductContext"; patch: Partial<ProductContext> }
   | { type: "setCategorySuggestions"; category: SuggestionCategory; suggestions: string[]; recommended: string[] }
   | { type: "toggleRole"; name: string; description: string }
@@ -129,6 +132,15 @@ function reducer(state: SyntheticProfile, action: Action): SyntheticProfile {
       return { ...state, ...action.patch };
     case "setGeneratedProfile":
       return { ...state, generated: action.value };
+    case "setBehaviorAxis": {
+      const behaviorAxes = { ...state.behaviorAxes, [action.key]: action.value };
+      const statements = axisStatements(behaviorAxes);
+      return {
+        ...state,
+        behaviorAxes,
+        decisionBehavior: { ...state.decisionBehavior, selected: statements, generated: statements.join(" ") },
+      };
+    }
     case "patchProductContext":
       return { ...state, productContext: { ...state.productContext, ...action.patch } };
     case "setCategorySuggestions": {

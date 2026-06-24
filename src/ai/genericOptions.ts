@@ -47,10 +47,9 @@ export const GENERIC_DECISION_BEHAVIORS = [
 
 export const GENERIC_INFORMATION_NEEDS = [
   "Status",
-  "Severity",
+  "Severity or priority",
   "Ownership",
-  "Timestamp",
-  "Current state",
+  "Timestamp / recency",
   "Next action",
   "Evidence",
   "Confirmation",
@@ -58,11 +57,8 @@ export const GENERIC_INFORMATION_NEEDS = [
   "Missing information",
   "Policy or rule",
   "Threshold",
-  "Priority",
-  "Impact",
-  "Risk level",
-  "Progress",
-  "Completion state",
+  "Risk or impact",
+  "Progress / completion",
   "Error reason",
 ];
 

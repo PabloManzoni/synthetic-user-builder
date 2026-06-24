@@ -6,14 +6,13 @@ import Step10TaskSuitability from "./Step10TaskSuitability";
 import ValidationPanel from "../components/ValidationPanel";
 import ExportPanel from "../components/ExportPanel";
 import AiEmptyHint from "../components/AiEmptyHint";
+import BehaviorAxes from "../components/BehaviorAxes";
 import {
-  suggestDecisionBehaviors,
   suggestInformationNeeds,
   suggestForbiddenAssumptions,
   suggestFrictionTriggers,
   suggestEmotionalBehaviors,
   suggestAbandonmentRules,
-  generateBehavioralSummary,
   generateRequiredInfo,
   generateConstraintRule,
   generateForbiddenRule,
@@ -22,7 +21,6 @@ import {
   generateAbandonmentRules,
 } from "../ai/mockAi";
 import {
-  GENERIC_DECISION_BEHAVIORS,
   GENERIC_INFORMATION_NEEDS,
   GENERIC_CONSTRAINTS,
   GENERIC_FORBIDDEN_ASSUMPTIONS,
@@ -77,15 +75,8 @@ export const STEPS: StepDef[] = [
     helper: "How this user decides under pressure, and how their trust and emotions shift through friction.",
     Body: () => (
       <div className="space-y-8">
-        <Sub title="Decision behavior" desc="How they decide under normal conditions and under pressure.">
-          <OptionStep
-            stepKey="decisionBehavior"
-            aiSuggest={suggestDecisionBehaviors}
-            common={GENERIC_DECISION_BEHAVIORS}
-            customPlaceholder="Other behavior…"
-            generatedTitle="Behavioral summary"
-            generate={generateBehavioralSummary}
-          />
+        <Sub title="Decision behavior" desc="Slide each axis toward how this user tends to act. No contradictory picks.">
+          <BehaviorAxes />
         </Sub>
         {divider}
         <Sub title="Emotional & trust" desc="How their emotional state and trust evolve through friction.">

@@ -126,6 +126,8 @@ export interface GeneratedProfile {
 export interface SyntheticProfile {
   profileName: string;
   primaryMotivation: string;
+  /** Behavior spectrum slider positions (axis key → 0-4). Drives decisionBehavior. */
+  behaviorAxes: Record<string, number>;
   /** Set by "Complete with AI"; export prefers these when present. */
   generated: GeneratedProfile | null;
   productContext: ProductContext;
