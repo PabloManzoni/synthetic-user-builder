@@ -16,6 +16,13 @@ const lines = (text: string) =>
     .map((l) => l.replace(/^[•\-]\s*/, "").trim())
     .filter(Boolean);
 
+// Rules text, falling back to the raw selections when the generated text was never
+// produced (e.g. filled via "Fill the blanks" or imported without visiting the step).
+const ruleLines = (s: { selected: string[]; generated: string }) => {
+  const g = lines(s.generated);
+  return g.length ? g : list(s);
+};
+
 // Narrative fields. Prefers AI-generated prose (from "Complete with AI") when
 // present; otherwise falls back to deterministic, heuristic text.
 function derive(p: SyntheticProfile) {
@@ -125,8 +132,8 @@ export function toMarkdown(p: SyntheticProfile): string {
     sec("Common wrong assumptions", bullets(d.commonWrongAssumptions)),
     sec("Required explicit information", bullets(list(p.informationNeeds))),
     sec("Constraints", bullets(list(p.constraints))),
-    sec("Behavioral rules", bullets(lines(p.frictionTriggers.generated))),
-    sec("Emotional progression rules", bullets(lines(p.emotionalBehavior.generated))),
+    sec("Behavioral rules", bullets(ruleLines(p.frictionTriggers))),
+    sec("Emotional progression rules", bullets(ruleLines(p.emotionalBehavior))),
     sec("Abandonment and escalation rules", bullets(list(p.abandonmentRules))),
     sec("Forbidden assumptions", bullets(list(p.forbiddenAssumptions))),
     sec("Suitable task types", bullets([...p.taskSuitability.suitable, ...p.taskSuitability.customSuitable])),
@@ -168,8 +175,8 @@ export function toJsonObject(p: SyntheticProfile) {
     commonWrongAssumptions: d.commonWrongAssumptions,
     requiredExplicitInformation: list(p.informationNeeds),
     constraints: list(p.constraints),
-    behavioralRules: lines(p.frictionTriggers.generated),
-    emotionalProgressionRules: lines(p.emotionalBehavior.generated),
+    behavioralRules: ruleLines(p.frictionTriggers),
+    emotionalProgressionRules: ruleLines(p.emotionalBehavior),
     abandonmentAndEscalationRules: list(p.abandonmentRules),
     forbiddenAssumptions: list(p.forbiddenAssumptions),
     suitableTaskTypes: [...p.taskSuitability.suitable, ...p.taskSuitability.customSuitable],
