@@ -17,7 +17,6 @@ export default function App() {
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const [visited, setVisited] = useState<Set<number>>(new Set([0]));
-  const [saved, setSaved] = useState(false);
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
@@ -26,6 +25,11 @@ export default function App() {
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [step]);
+
+  // Autosave: every change is persisted, so there's no manual "save" to remember.
+  useEffect(() => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(profile));
+  }, [profile]);
 
   // Reflect builder state in the tab title.
   const pct = profileCompleteness(profile).pct;
@@ -88,12 +92,6 @@ export default function App() {
     });
   }, [profile, c, done, visited]);
 
-  const saveDraft = () => {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(profile));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1400);
-  };
-
   const current = STEPS[step];
   const completeness = profileCompleteness(profile);
 
@@ -113,7 +111,7 @@ export default function App() {
               <div className="leading-tight">
                 <div className="text-[13px] font-medium text-[var(--color-ink)]">{profile.profileName}</div>
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
-                  Draft
+                  {pct >= 100 ? "Complete" : "In progress"}
                 </div>
               </div>
               <span
@@ -126,7 +124,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => {
-              if (confirm("Start a new blank profile? Your current draft will be cleared.")) {
+              if (confirm("Start a new blank profile? Your current progress will be cleared.")) {
                 localStorage.removeItem(DRAFT_KEY);
                 dispatch({ type: "reset" });
                 go(0);
@@ -205,14 +203,6 @@ export default function App() {
         </button>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={saveDraft}
-            className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
-            style={{ borderColor: "var(--color-border-strong)", color: "var(--color-ink-soft)" }}
-          >
-            {saved ? "Saved ✓" : "Save draft"}
-          </button>
           {step !== LAST && (
             <button
               type="button"

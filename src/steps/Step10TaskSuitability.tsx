@@ -8,6 +8,7 @@ import CustomOptionInput from "../components/CustomOptionInput";
 import AiFillButton from "../components/AiFillButton";
 import AiEmptyHint from "../components/AiEmptyHint";
 import MultiSection from "../components/MultiSection";
+import { randomSubset } from "../lib/random";
 
 function GroupLabel({ label, tone }: { label: string; tone?: string }) {
   return (
@@ -89,8 +90,19 @@ export default function Step10TaskSuitability() {
     </div>
   );
 
+  const randomizeAll = () => {
+    dispatch({
+      type: "patchTaskSuitability",
+      patch: {
+        suitable: [...randomSubset(GENERIC_SUITABLE_TASKS), ...t.customSuitable.filter((c) => t.suitable.includes(c))],
+        unsuitable: [...randomSubset(GENERIC_UNSUITABLE_TASKS, 2, 4), ...t.customUnsuitable.filter((c) => t.unsuitable.includes(c))],
+      },
+    });
+  };
+
   return (
     <MultiSection
+      onRandomize={randomizeAll}
       sections={[
         {
           key: "suitable",

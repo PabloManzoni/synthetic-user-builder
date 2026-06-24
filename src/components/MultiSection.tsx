@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import AiFillButton from "./AiFillButton";
 
 export interface SectionDef {
   key: string;
@@ -18,7 +19,14 @@ const divider = <div className="h-px" style={{ background: "var(--color-border)"
 // Multi-section step wrapper. A sticky strip at the top lists every sub-section
 // so it's obvious there are several to fill; it highlights the one currently in
 // view (scroll-spy) and clicking jumps to it. Each section shows ✓ when filled.
-export default function MultiSection({ sections }: { sections: SectionDef[] }) {
+export default function MultiSection({
+  sections,
+  onRandomize,
+}: {
+  sections: SectionDef[];
+  /** When set, a "Randomize all" button appears in the sticky strip. */
+  onRandomize?: () => void;
+}) {
   const [active, setActive] = useState(sections[0]?.key);
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -61,6 +69,11 @@ export default function MultiSection({ sections }: { sections: SectionDef[] }) {
           <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
             {sections.length} sections
           </span>
+          {onRandomize && (
+            <span className="mr-1">
+              <AiFillButton variant="random" label="Randomize all" onClick={onRandomize} />
+            </span>
+          )}
           {sections.map((s, i) => {
             const on = active === s.key;
             return (
