@@ -75,8 +75,8 @@ export default function App() {
             <div className="flex items-center gap-2 text-right">
               <div className="leading-tight">
                 <div className="text-[13px] font-medium text-[var(--color-ink)]">{profile.profileName}</div>
-                <div className="text-[10px] uppercase tracking-wide" style={{ color: completeness.color }}>
-                  Draft · {completeness.label}
+                <div className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
+                  Draft
                 </div>
               </div>
               <span
