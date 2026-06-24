@@ -4,7 +4,6 @@ import { useProfile } from "../state/profileStore";
 import { research } from "../ai/mockAi";
 import { randomProfileName } from "../lib/random";
 import AiFillButton from "../components/AiFillButton";
-import type { ResearchMode } from "../state/types";
 import WarningBanner from "../components/WarningBanner";
 
 const Labeled = ({
@@ -36,12 +35,6 @@ const Labeled = ({
 
 const inputCls =
   "w-full rounded-lg border bg-[var(--color-surface-2)] px-3 py-2.5 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]";
-
-const MODES: { key: ResearchMode; label: string; hint: string }[] = [
-  { key: "search", label: "Search public context", hint: "Let AI infer the product and likely roles" },
-  { key: "manual", label: "Describe manually", hint: "Skip AI and fill in the fields yourself" },
-  { key: "skip", label: "Skip product context", hint: "Continue with generic options only" },
-];
 
 const RESEARCH_STEPS = [
   "Reading public signals about the product…",
@@ -106,44 +99,38 @@ export default function Step1ProductContext() {
         />
       </Labeled>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Labeled label="Client">
-          <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.clientName}
-                 onChange={(e) => patch({ clientName: e.target.value })} placeholder="e.g. Netflix" />
-        </Labeled>
-        <Labeled label="Product" optional>
-          <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.productName}
-                 onChange={(e) => patch({ productName: e.target.value })} placeholder="e.g. Backoffice" />
-        </Labeled>
-      </div>
+      <Labeled label="Client">
+        <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.clientName}
+               onChange={(e) => patch({ clientName: e.target.value })} placeholder="e.g. Netflix, Notion, your company…" />
+      </Labeled>
 
       <div>
-        <span className="mb-2 block text-[12px] font-medium text-[var(--color-ink-soft)]">How do you want context?</span>
-        <div className="space-y-2">
-          {MODES.map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => patch({ researchMode: m.key })}
-              className="flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors"
-              style={{
-                borderColor: c.researchMode === m.key ? "var(--color-accent)" : "var(--color-border)",
-                background: c.researchMode === m.key ? "var(--color-accent-soft)" : "var(--color-surface-2)",
-              }}
-            >
-              <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full border"
-                    style={{ borderColor: c.researchMode === m.key ? "var(--color-accent)" : "var(--color-border-strong)",
-                             background: c.researchMode === m.key ? "var(--color-accent)" : "transparent" }} />
-              <span>
-                <span className="block text-sm text-[var(--color-ink)]">{m.label}</span>
-                <span className="block text-[12px] text-[var(--color-ink-faint)]">{m.hint}</span>
-              </span>
-            </button>
-          ))}
-        </div>
+        <Labeled label="Product description">
+          <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={5} value={c.manualDescription}
+                    onChange={(e) => patch({ manualDescription: e.target.value })}
+                    placeholder={"Describe the product, or paste its website, links and any details…\n\ne.g. https://comptrain.co — CrossFit programming & gym management: classes, athlete tracking, leaderboards"} />
+        </Labeled>
+        <p className="mt-1.5 flex gap-1.5 text-[12px] leading-snug text-[var(--color-ink-faint)]">
+          <span aria-hidden>💡</span>
+          <span>
+            Paste the product's page, links or a detailed description — the more context you give, the more
+            accurately the AI researches the <em>real</em> app instead of guessing.
+          </span>
+        </p>
       </div>
 
-      {c.researchMode === "search" && (
+      <div className="grid grid-cols-2 gap-3">
+        <Labeled label="Primary users" optional>
+          <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownPrimaryUsers}
+                 onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most?" />
+        </Labeled>
+        <Labeled label="Known risk areas" optional>
+          <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownRiskAreas}
+                 onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if misread?" />
+        </Labeled>
+      </div>
+
+      {c.researchMode !== "skip" && (
         <div className="space-y-2">
           <button
             type="button"
@@ -152,7 +139,6 @@ export default function Step1ProductContext() {
             className="relative w-full overflow-hidden rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-wait"
             style={{ background: "var(--color-accent)", color: "#0b0d10" }}
           >
-            {/* shimmer sweep while loading */}
             {loading && (
               <motion.span
                 aria-hidden
@@ -197,28 +183,8 @@ export default function Step1ProductContext() {
         </div>
       )}
 
-      {(c.researchMode === "manual" || c.researchMode === "search") && (
-        <div className="space-y-3">
-          <Labeled label="Short product description" optional>
-            <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={3} value={c.manualDescription}
-                      onChange={(e) => patch({ manualDescription: e.target.value })}
-                      placeholder="What does this product do?" />
-          </Labeled>
-          <div className="grid grid-cols-1 gap-3">
-            <Labeled label="Primary users" optional>
-              <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownPrimaryUsers}
-                     onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most?" />
-            </Labeled>
-            <Labeled label="Known risk areas" optional>
-              <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownRiskAreas}
-                     onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if misread?" />
-            </Labeled>
-          </div>
-        </div>
-      )}
-
       <AnimatePresence>
-        {c.researchMode === "search" && c.researched && (
+        {c.researched && (
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -228,7 +194,7 @@ export default function Step1ProductContext() {
           >
             {c.researchFailed ? (
               <WarningBanner tone="warn">
-                We could not find enough reliable context. You can continue manually or with generic options.
+                We could not find enough reliable context. Add more detail or links above, or continue with generic options.
               </WarningBanner>
             ) : (
               <div className="rounded-xl border px-4 py-3" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}>
@@ -255,6 +221,25 @@ export default function Step1ProductContext() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="pt-1 text-center">
+        {c.researchMode === "skip" ? (
+          <span className="text-[12px] text-[var(--color-ink-faint)]">
+            Skipped — using generic options.{" "}
+            <button type="button" onClick={() => patch({ researchMode: "search" })} className="text-[var(--color-info)] underline underline-offset-2">
+              Undo
+            </button>
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => patch({ researchMode: "skip" })}
+            className="text-[12px] text-[var(--color-ink-faint)] underline underline-offset-2 hover:text-[var(--color-ink-soft)]"
+          >
+            Skip product context →
+          </button>
+        )}
+      </div>
     </>
   );
 }
