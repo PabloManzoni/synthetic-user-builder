@@ -121,6 +121,7 @@ type Action =
   | { type: "removeCustom"; key: OptionKey; value: string }
   | { type: "patchTaskSuitability"; patch: Partial<TaskSuitabilitySlice> }
   | { type: "toggleTask"; field: "suitable" | "unsuitable"; value: string }
+  | { type: "loadProfile"; profile: unknown }
   | { type: "reset" };
 
 const toggle = (arr: string[], value: string) =>
@@ -225,6 +226,8 @@ function reducer(state: SyntheticProfile, action: Action): SyntheticProfile {
           [action.field]: toggle(state.taskSuitability[action.field], action.value),
         },
       };
+    case "loadProfile":
+      return coerceProfile(action.profile);
     case "reset":
       return makeInitial();
     default:
@@ -241,15 +244,23 @@ const ProfileContext = createContext<Store | null>(null);
 
 export const DRAFT_KEY = "synthetic-user-builder.draft";
 
+/** Merge an untrusted profile object onto the defaults, repairing missing/old fields. */
+export function coerceProfile(parsed: any): SyntheticProfile {
+  // Guard against an older role shape (single → multi-select) or a missing role.
+  const role = Array.isArray(parsed?.role?.selected) ? parsed.role : initialProfile.role;
+  return {
+    ...initialProfile,
+    ...(parsed && typeof parsed === "object" ? parsed : {}),
+    role,
+    behaviorAxes: parsed?.behaviorAxes && typeof parsed.behaviorAxes === "object" ? parsed.behaviorAxes : {},
+    profileName: parsed?.profileName || randomProfileName(),
+  };
+}
+
 function loadDraft(): SyntheticProfile {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      // Guard against drafts saved with an older role shape (single → multi-select).
-      const role = Array.isArray(parsed?.role?.selected) ? parsed.role : initialProfile.role;
-      return { ...initialProfile, ...parsed, role, profileName: parsed.profileName || randomProfileName() };
-    }
+    if (raw) return coerceProfile(JSON.parse(raw));
   } catch {
     /* ignore corrupt draft */
   }

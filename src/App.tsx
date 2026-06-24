@@ -5,9 +5,23 @@ import { WizardNavContext } from "./state/nav";
 import Stepper from "./components/Stepper";
 import StepShell from "./components/StepShell";
 import LiveProfilePreview from "./components/LiveProfilePreview";
+import Toast from "./components/Toast";
+import ImportModal from "./components/ImportModal";
 import { profileCompleteness, validateProfile } from "./lib/validation";
+import { toProfileFile, parseProfileFile, download } from "./lib/export";
 import type { StepStatus } from "./components/Stepper";
 import { STEPS } from "./steps";
+
+const DownloadIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" />
+  </svg>
+);
+const UploadIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 21V9" /><path d="m7 14 5-5 5 5" /><path d="M5 3h14" />
+  </svg>
+);
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const LAST = STEPS.length - 1;
@@ -19,7 +33,16 @@ export default function App() {
   const [visited, setVisited] = useState<Set<number>>(new Set([0]));
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
   const mainRef = useRef<HTMLElement>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2200);
+  };
 
   // Reset scroll to the top whenever the step changes.
   useEffect(() => {
@@ -45,6 +68,27 @@ export default function App() {
     setDir(next > step ? 1 : -1);
     setStep(next);
     setVisited((v) => new Set(v).add(next));
+  };
+
+  // Export the full editable profile as one portable file (silent — just a toast).
+  const exportProfile = () => {
+    const slug = profile.profileName ? "-" + profile.profileName.toLowerCase().replace(/\s+/g, "-") : "";
+    download(`synthetic-user${slug}.profile.json`, toProfileFile(profile), "application/json");
+    showToast("Profile exported");
+  };
+
+  // Import replaces the current profile entirely with the uploaded one.
+  const importProfile = (text: string) => {
+    const parsed = parseProfileFile(text);
+    if (!parsed) {
+      showToast("That file isn't a valid profile");
+      return;
+    }
+    dispatch({ type: "loadProfile", profile: parsed });
+    setImporting(false);
+    setStep(0);
+    setVisited(new Set([0]));
+    showToast("Profile imported");
   };
 
   const c = profile.productContext;
@@ -121,6 +165,28 @@ export default function App() {
               />
             </div>
           )}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={exportProfile}
+              title="Export profile to a file"
+              aria-label="Export profile"
+              className="rounded-md border p-1.5 text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink)]"
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              <DownloadIcon />
+            </button>
+            <button
+              type="button"
+              onClick={() => setImporting(true)}
+              title="Import profile from a file"
+              aria-label="Import profile"
+              className="rounded-md border p-1.5 text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink)]"
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              <UploadIcon />
+            </button>
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -157,12 +223,13 @@ export default function App() {
         </aside>
 
         {/* Step body */}
-        <main ref={mainRef} id="step-scroll" className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
+        <main ref={mainRef} id="step-scroll" className="min-w-0 flex-1 overflow-y-auto px-8 pb-8">
           <motion.div
             key={step}
             initial={{ opacity: 0, x: dir * 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.22, ease: EASE }}
+            className="pt-8"
           >
             <StepShell step={step} title={current.title} helper={current.helper}>
               <current.Body />
@@ -234,6 +301,9 @@ export default function App() {
           )}
         </div>
       </footer>
+
+      {importing && <ImportModal onClose={() => setImporting(false)} onFile={importProfile} />}
+      <Toast message={toast} />
     </div>
     </WizardNavContext.Provider>
   );

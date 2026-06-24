@@ -4,40 +4,53 @@ import { toMarkdown, toJson, toPromptBlock, download } from "../lib/export";
 import { completeProfile } from "../ai/aiClient";
 import WarningBanner from "./WarningBanner";
 
-type Format = "markdown" | "json" | "prompt";
-
-const tabs: { key: Format; label: string }[] = [
-  { key: "markdown", label: "Markdown" },
-  { key: "json", label: "JSON" },
-  { key: "prompt", label: "Prompt block" },
-];
+type Format = "markdown" | "json" | "prompt" | "enhanced";
 
 export default function ExportPanel() {
   const { profile, dispatch } = useProfile();
   const [format, setFormat] = useState<Format>("markdown");
   const [copied, setCopied] = useState(false);
-  const [completing, setCompleting] = useState(false);
-  const [completeError, setCompleteError] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
+  const [enhanceError, setEnhanceError] = useState(false);
 
-  const runComplete = async () => {
-    setCompleting(true);
-    setCompleteError(false);
+  const enhanced = !!profile.generated;
+
+  const runEnhance = async () => {
+    setEnhancing(true);
+    setEnhanceError(false);
     const result = await completeProfile(profile);
     if (result) {
       dispatch({ type: "setGeneratedProfile", value: result });
+      setFormat("enhanced"); // auto-switch to the enhanced tab when it's ready
     } else {
-      setCompleteError(true);
+      setEnhanceError(true);
     }
-    setCompleting(false);
+    setEnhancing(false);
   };
 
-  const content =
-    format === "markdown" ? toMarkdown(profile) : format === "json" ? toJson(profile) : toPromptBlock(profile);
+  // The three base tabs always show your ORIGINAL selections (never the AI rewrite),
+  // so enhancing never overwrites what you built. The 4th tab holds the enhanced copy.
+  const original = { ...profile, generated: null };
 
-  const filename =
-    "synthetic-user" +
-    (profile.profileName ? "-" + profile.profileName.toLowerCase().replace(/\s+/g, "-") : "") +
-    (format === "markdown" ? ".md" : format === "json" ? ".json" : ".txt");
+  const tabs: { key: Format; label: string }[] = [
+    { key: "markdown", label: "Markdown" },
+    { key: "json", label: "JSON" },
+    { key: "prompt", label: "Prompt block" },
+    ...(enhanced ? ([{ key: "enhanced", label: "✨ AI Enhanced" }] as const) : []),
+  ];
+
+  const content =
+    format === "enhanced"
+      ? toMarkdown(profile)
+      : format === "markdown"
+        ? toMarkdown(original)
+        : format === "json"
+          ? toJson(original)
+          : toPromptBlock(original);
+
+  const ext = format === "json" ? ".json" : format === "prompt" ? ".txt" : ".md";
+  const slug = profile.profileName ? "-" + profile.profileName.toLowerCase().replace(/\s+/g, "-") : "";
+  const filename = `synthetic-user${slug}${format === "enhanced" ? "-enhanced" : ""}${ext}`;
 
   const copy = async () => {
     await navigator.clipboard.writeText(content);
@@ -50,35 +63,34 @@ export default function ExportPanel() {
       <div
         className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
         style={{
-          borderColor: profile.generated ? "var(--color-ok)" : "var(--color-info)",
+          borderColor: enhanced ? "var(--color-ok)" : "var(--color-info)",
           background: "var(--color-surface-2)",
         }}
       >
         <div>
           <div className="text-[13px] font-medium text-[var(--color-ink)]">
-            {profile.generated ? "Formatted to the synthetic-user standard ✓" : "Format to the synthetic-user standard"}
+            {enhanced ? "Enhanced with AI ✓" : "Enhance the synthetic user with AI"}
           </div>
           <div className="text-[11px] text-[var(--color-ink-faint)]">
-            {profile.generated
-              ? "AI rewrote your selections into a consistent, simulation-ready profile. Re-run to regenerate."
-              : "AI rewrites your selections into a clean, consistent profile and fills the empty fields."}
+            {enhanced
+              ? "The enhanced version lives in the AI Enhanced tab. Your original export is untouched."
+              : "AI rewrites your selections into a cleaner, fuller profile in a new tab — your original stays as-is."}
           </div>
         </div>
         <button
           type="button"
-          onClick={runComplete}
-          disabled={completing}
+          onClick={runEnhance}
+          disabled={enhancing}
           className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60"
           style={{ background: "var(--color-accent)", color: "#0b0d10" }}
         >
-          {completing ? "Formatting…" : profile.generated ? "↻ Re-run" : "✨ Format to standard"}
+          {enhancing ? "Enhancing…" : enhanced ? "↻ Re-enhance" : "✨ Enhance with AI"}
         </button>
       </div>
 
-      {completeError && (
+      {enhanceError && (
         <WarningBanner tone="warn">
-          AI completion is unavailable right now (no key or a transient error). The export still works with the
-          deterministic text below.
+          AI enhancement is unavailable right now (no key or a transient error). Your export below still works.
         </WarningBanner>
       )}
 
@@ -117,17 +129,11 @@ export default function ExportPanel() {
         </button>
         <button
           type="button"
-          onClick={() =>
-            download(
-              filename,
-              content,
-              format === "json" ? "application/json" : "text/plain"
-            )
-          }
+          onClick={() => download(filename, content, format === "json" ? "application/json" : "text/plain")}
           className="flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors"
           style={{ borderColor: "var(--color-border-strong)", color: "var(--color-ink)" }}
         >
-          Download {format === "markdown" ? ".md" : format === "json" ? ".json" : ".txt"}
+          Download {ext}
         </button>
       </div>
 

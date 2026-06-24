@@ -60,10 +60,10 @@ export default function MultiSection({
 
   return (
     <div>
-      {/* Sticky section nav */}
+      {/* Sticky section nav — opaque so content scrolls fully behind it, flush to the top. */}
       <div
-        className="sticky top-0 z-10 -mx-8 mb-6 border-b px-8 py-2.5 backdrop-blur"
-        style={{ background: "color-mix(in srgb, var(--color-bg) 88%, transparent)", borderColor: "var(--color-border)" }}
+        className="sticky -top-px z-20 -mx-8 mb-6 border-b px-8 py-3"
+        style={{ background: "var(--color-bg)", borderColor: "var(--color-border)" }}
       >
         <div className="flex flex-wrap items-center gap-2">
           <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">

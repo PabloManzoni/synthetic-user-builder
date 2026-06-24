@@ -180,6 +180,29 @@ export function toPromptBlock(p: SyntheticProfile): string {
   ].join("\n");
 }
 
+// ---- Portable full-profile file (round-trips back into this editor) ----
+
+const PROFILE_FILE_TAG = "synthetic-user-builder";
+export const PROFILE_FILE_VERSION = 1;
+
+/** Serialize the entire editable profile so it can be re-imported elsewhere. */
+export function toProfileFile(p: SyntheticProfile): string {
+  return JSON.stringify({ app: PROFILE_FILE_TAG, version: PROFILE_FILE_VERSION, profile: p }, null, 2);
+}
+
+/** Parse a profile file (our wrapper, or a bare profile object). Null if unusable. */
+export function parseProfileFile(text: string): unknown | null {
+  try {
+    const data = JSON.parse(text);
+    if (data && data.app === PROFILE_FILE_TAG && data.profile) return data.profile;
+    // Be lenient: accept a bare profile object too (must look like one).
+    if (data && data.role && Array.isArray(data.role.selected)) return data;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function download(filename: string, content: string, type = "text/plain") {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
