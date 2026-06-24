@@ -26,6 +26,15 @@ export default function App() {
     mainRef.current?.scrollTo({ top: 0 });
   }, [step]);
 
+  // Reflect builder state in the tab title.
+  const pct = profileCompleteness(profile).pct;
+  useEffect(() => {
+    const tag = pct >= 100 ? "Complete ✓" : `${pct}%`;
+    document.title = profile.profileName
+      ? `SUB · ${profile.profileName} · ${tag}`
+      : `Synthetic User Builder · ${tag}`;
+  }, [pct, profile.profileName]);
+
   const go = (next: number) => {
     if (next < 0 || next > LAST) return;
     setDir(next > step ? 1 : -1);

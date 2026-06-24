@@ -1,3 +1,5 @@
+import { STEP_TITLES } from "../state/types";
+
 export default function StepShell({
   step,
   title,
@@ -12,7 +14,7 @@ export default function StepShell({
   return (
     <div className="mx-auto w-full max-w-xl">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-info)]">
-        Step {step + 1} of 12
+        Step {step + 1} of {STEP_TITLES.length}
       </p>
       <h2 className="mt-1.5 text-2xl font-semibold text-[var(--color-ink)]">{title}</h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-soft)]">{helper}</p>
