@@ -60,16 +60,33 @@ export default function App() {
     [profile, c, visited]
   );
 
-  // Per-step status for the index: unvisited → neutral, visited → ready/attention.
+  // Per-step status for the index:
+  //   neutral  → not interacted with (even if visited)
+  //   amber !  → interacted but incomplete or has an invalid validation issue
+  //   green ✓  → complete and valid
   const status = useMemo<StepStatus[]>(() => {
     const invalidSteps = new Set(
       validateProfile(profile).dimensions.filter((d) => d.verdict === "invalid").map((d) => d.step)
     );
+    const anyData = (s: { selected: string[]; custom: string[] }) => s.selected.length > 0 || s.custom.length > 0;
+    const e = profile.expertise;
+    const ts = profile.taskSuitability;
+    const touched = [
+      c.researched || !!(c.clientName || c.productName || c.manualDescription || c.knownPrimaryUsers || c.knownRiskAreas),
+      profile.role.selected.length > 0 || profile.role.custom.length > 0,
+      !!(e.domainExpertise || e.technicalProficiency || e.productTypeFamiliarity || e.exactProductFamiliarity),
+      anyData(profile.decisionBehavior) || anyData(profile.emotionalBehavior),
+      anyData(profile.informationNeeds) || anyData(profile.constraints) || anyData(profile.forbiddenAssumptions),
+      anyData(profile.frictionTriggers) || anyData(profile.abandonmentRules),
+      ts.suitable.length + ts.customSuitable.length + ts.unsuitable.length + ts.customUnsuitable.length > 0,
+      visited.has(7), // Validation — action step
+      visited.has(8), // Export — action step
+    ];
     return done.map((filled, i) => {
-      if (!visited.has(i)) return "unvisited";
-      return filled && !invalidSteps.has(i) ? "ready" : "attention";
+      if (filled && !invalidSteps.has(i)) return "ready";
+      return touched[i] ? "attention" : "unvisited";
     });
-  }, [profile, done, visited]);
+  }, [profile, c, done, visited]);
 
   const saveDraft = () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(profile));
