@@ -48,7 +48,7 @@ async function geminiJSON(
         }
       }
       lastStatus = res.status;
-      if (res.status === 503 || res.status === 429) {
+      if (res.status === 503) {
         await sleep(500 * (a + 1));
         continue;
       }
