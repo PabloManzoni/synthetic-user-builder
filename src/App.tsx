@@ -7,6 +7,7 @@ import StepShell from "./components/StepShell";
 import LiveProfilePreview from "./components/LiveProfilePreview";
 import Toast from "./components/Toast";
 import ImportModal from "./components/ImportModal";
+import NewProfileModal from "./components/NewProfileModal";
 import { profileCompleteness, validateProfile } from "./lib/validation";
 import { toProfileFile, parseProfileFile, download } from "./lib/export";
 import type { StepStatus } from "./components/Stepper";
@@ -34,6 +35,7 @@ export default function App() {
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [confirmingNew, setConfirmingNew] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
   const mainRef = useRef<HTMLElement>(null);
@@ -93,6 +95,7 @@ export default function App() {
 
   const c = profile.productContext;
   const count = (s: { selected: string[] }) => s.selected.length;
+  const validation = useMemo(() => validateProfile(profile), [profile]);
   const done = useMemo<boolean[]>(
     () => [
       c.researched || c.researchMode === "skip" || !!(c.clientName || c.manualDescription),
@@ -102,10 +105,10 @@ export default function App() {
       count(profile.informationNeeds) > 0 || count(profile.forbiddenAssumptions) > 0, // Information & limits
       count(profile.frictionTriggers) > 0 || count(profile.abandonmentRules) > 0, // Friction & breaking points
       profile.taskSuitability.suitable.length + profile.taskSuitability.customSuitable.length > 0,
-      visited.has(7), // Validation
-      visited.has(8), // Export
+      validation.overall === "strong", // Validation — green only when the profile actually passes
+      !!profile.generated, // Export — green only when a synthetic user has been generated
     ],
-    [profile, c, visited]
+    [profile, c, validation]
   );
 
   // Per-step status for the index:
@@ -113,9 +116,7 @@ export default function App() {
   //   amber !  → interacted but incomplete or has an invalid validation issue
   //   green ✓  → complete and valid
   const status = useMemo<StepStatus[]>(() => {
-    const invalidSteps = new Set(
-      validateProfile(profile).dimensions.filter((d) => d.verdict === "invalid").map((d) => d.step)
-    );
+    const invalidSteps = new Set(validation.dimensions.filter((d) => d.verdict === "invalid").map((d) => d.step));
     const anyData = (s: { selected: string[]; custom: string[] }) => s.selected.length > 0 || s.custom.length > 0;
     const e = profile.expertise;
     const ts = profile.taskSuitability;
@@ -127,14 +128,14 @@ export default function App() {
       anyData(profile.informationNeeds) || anyData(profile.constraints) || anyData(profile.forbiddenAssumptions),
       anyData(profile.frictionTriggers) || anyData(profile.abandonmentRules),
       ts.suitable.length + ts.customSuitable.length + ts.unsuitable.length + ts.customUnsuitable.length > 0,
-      visited.has(7), // Validation — action step
-      visited.has(8), // Export — action step
+      false, // Validation — action step, never "attention"
+      false, // Export — action step, never "attention"
     ];
     return done.map((filled, i) => {
       if (filled && !invalidSteps.has(i)) return "ready";
       return touched[i] ? "attention" : "unvisited";
     });
-  }, [profile, c, done, visited]);
+  }, [profile, c, done, validation]);
 
   const current = STEPS[step];
   const completeness = profileCompleteness(profile);
@@ -189,13 +190,7 @@ export default function App() {
           </div>
           <button
             type="button"
-            onClick={() => {
-              if (confirm("Start a new blank profile? Your current progress will be cleared.")) {
-                localStorage.removeItem(DRAFT_KEY);
-                dispatch({ type: "reset" });
-                go(0);
-              }
-            }}
+            onClick={() => setConfirmingNew(true)}
             className="rounded-md border px-3 py-1.5 text-[12px] font-medium text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink-soft)]"
             style={{ borderColor: "var(--color-border)" }}
           >
@@ -303,6 +298,19 @@ export default function App() {
       </footer>
 
       {importing && <ImportModal onClose={() => setImporting(false)} onFile={importProfile} />}
+      {confirmingNew && (
+        <NewProfileModal
+          onClose={() => setConfirmingNew(false)}
+          onBackup={exportProfile}
+          onConfirm={() => {
+            localStorage.removeItem(DRAFT_KEY);
+            dispatch({ type: "reset" });
+            setStep(0);
+            setVisited(new Set([0]));
+            setConfirmingNew(false);
+          }}
+        />
+      )}
       <Toast message={toast} />
     </div>
     </WizardNavContext.Provider>
