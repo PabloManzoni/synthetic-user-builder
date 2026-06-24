@@ -147,7 +147,7 @@ export default function Step1ProductContext() {
                   transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
                 />
               )}
-              {loading ? "Analyzing…" : c.researched ? "Analyze again" : "Analyze information"}
+              {loading ? "Building…" : c.researched ? "Rebuild suggestions" : "Build my suggestions with AI"}
             </span>
           </button>
 
