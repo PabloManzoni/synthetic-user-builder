@@ -32,7 +32,7 @@ export default function Step10TaskSuitability() {
               variant="ai"
               label="Select for me"
               onClick={() => {
-                const chosen = recommendedFor(profile.productContext, "suitableTasks", aiSuitable);
+                const chosen = recommendedFor(profile.productContext, "suitableTasks", aiSuitable, GENERIC_SUITABLE_TASKS);
                 dispatch({
                   type: "patchTaskSuitability",
                   patch: { suitable: [...chosen, ...t.customSuitable.filter((c) => t.suitable.includes(c))] },

@@ -2,6 +2,25 @@
 // Returns null on any failure so callers can fall back to the deterministic mock.
 
 import type { ProductContext, AiSuggestions, SyntheticProfile, GeneratedProfile } from "../state/types";
+import {
+  GENERIC_DECISION_BEHAVIORS,
+  GENERIC_INFORMATION_NEEDS,
+  GENERIC_FORBIDDEN_ASSUMPTIONS,
+  GENERIC_FRICTION_TRIGGERS,
+  GENERIC_EMOTIONAL_BEHAVIORS,
+  GENERIC_ABANDONMENT_RULES,
+  GENERIC_SUITABLE_TASKS,
+} from "./genericOptions";
+
+const COMMON_POOLS = {
+  decisionBehaviors: GENERIC_DECISION_BEHAVIORS,
+  informationNeeds: GENERIC_INFORMATION_NEEDS,
+  forbiddenAssumptions: GENERIC_FORBIDDEN_ASSUMPTIONS,
+  frictionTriggers: GENERIC_FRICTION_TRIGGERS,
+  emotionalBehaviors: GENERIC_EMOTIONAL_BEHAVIORS,
+  abandonmentRules: GENERIC_ABANDONMENT_RULES,
+  suitableTasks: GENERIC_SUITABLE_TASKS,
+};
 
 export interface AiResearchResponse {
   summary: string;
@@ -19,7 +38,7 @@ export async function callAi(ctx: ProductContext): Promise<AiResearchResponse | 
     const res = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(ctx),
+      body: JSON.stringify({ ...ctx, commonPools: COMMON_POOLS }),
     });
     if (!res.ok) return null; // 503 (no key), 502 (gemini error), etc. → fall back to mock
     const data = (await res.json()) as AiResearchResponse;

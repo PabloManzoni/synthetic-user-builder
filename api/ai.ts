@@ -21,6 +21,13 @@ Hard rules for everything you produce:
 - Output STRICT JSON only, matching the requested shape. No prose, no markdown.`;
 
 function buildPrompt(ctx: any): string {
+  const common = ctx.commonPools || {};
+  const commonText = Object.keys(common).length
+    ? "\nCOMMON OPTIONS you may ALSO draw from for 'recommended' if they fit this role:\n" +
+      Object.entries(common)
+        .map(([k, v]) => `- ${k}: ${(v as string[]).join(" | ")}`)
+        .join("\n")
+    : "";
   return `${SYSTEM}
 
 PRODUCT CONTEXT (from the user; may be partial):
@@ -29,6 +36,7 @@ PRODUCT CONTEXT (from the user; may be partial):
 - Description: ${ctx.manualDescription || "(none)"}
 - Primary users: ${ctx.knownPrimaryUsers || "(unknown)"}
 - Known risk areas: ${ctx.knownRiskAreas || "(unknown)"}
+${commonText}
 
 Return JSON with EXACTLY this shape:
 {
@@ -59,10 +67,11 @@ Return JSON with EXACTLY this shape:
     "suitableTasks": ["subset"]
   }
 }
-Provide 3-6 items per suggestion list and 3-5 roles. "recommended" must be a CURATED SUBSET
-of each corresponding suggestions list (each item must appear verbatim in suggestions) — pick only
-the 2-4 items that together make a STRONG but NOT over-guided profile for this role, leaving the
-rest as optional. If context is weak, lower the confidence and keep items generic but still behavioral.`;
+Provide 3-6 items per suggestion list and 3-5 roles. "recommended" is your CURATED PICK per category —
+choose the 2-4 items that together make a STRONG but NOT over-guided profile for this role. Each
+recommended item must appear verbatim EITHER in the matching suggestions list OR in the COMMON OPTIONS
+above — pick whatever genuinely fits, AI-suggested or common, not just the first ones. If context is
+weak, lower the confidence and keep items generic but still behavioral.`;
 }
 
 export default async function handler(req: any, res: any) {

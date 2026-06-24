@@ -96,8 +96,11 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   const infoCount = p.informationNeeds.selected.length;
   const frictionCount = p.frictionTriggers.selected.length;
 
+  const roleSelected = p.role.selected.length > 0;
+  const roleText = p.role.selected.map((n) => p.role.descriptions[n] || "").join(" ");
+
   const allText = [
-    p.role.roleDescription,
+    roleText,
     p.decisionBehavior.generated,
     p.forbiddenAssumptions.generated,
     p.frictionTriggers.generated,
@@ -110,7 +113,7 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
 
   // 1. Completeness
   const filledSlices = [
-    p.role.selectedRole,
+    roleSelected,
     p.expertise.domainExpertise,
     behaviorCount,
     infoCount,
@@ -133,13 +136,13 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   });
 
   // 2. Role clarity
-  const roleDemographic = detectDemographicOnly(p.role.roleDescription);
+  const roleDemographic = detectDemographicOnly(roleText);
   dims.push({
     key: "roleClarity",
     label: "Role clarity",
     step: 1,
-    verdict: !p.role.selectedRole ? "invalid" : roleDemographic ? "refine" : "strong",
-    explanation: !p.role.selectedRole
+    verdict: !roleSelected ? "invalid" : roleDemographic ? "refine" : "strong",
+    explanation: !roleSelected
       ? "No role selected."
       : roleDemographic
         ? "Role reads as a demographic description, not a decision agent."
@@ -265,9 +268,9 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
     label: "Reusability",
     step: 9,
     verdict:
-      p.role.selectedRole && p.taskSuitability.suitable.length > 0 && !taskLeak ? "strong" : "refine",
+      roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak ? "strong" : "refine",
     explanation:
-      p.role.selectedRole && p.taskSuitability.suitable.length > 0 && !taskLeak
+      roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak
         ? "Reusable across multiple tasks of the suitable types."
         : "Define suitable task types and keep it task-independent to maximize reuse.",
   });

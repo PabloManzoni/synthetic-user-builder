@@ -24,7 +24,7 @@ function buildPrompt(p: any): string {
   return `${SYSTEM}
 
 PRODUCT: ${ctx.clientName || ""} ${ctx.productName || ""} — ${ctx.manualDescription || ctx.aiSummary || "(no description)"}
-ROLE: ${p.role?.selectedRole || "(none)"} — ${p.role?.roleDescription || ""}
+ROLE(S): ${(p.role?.selected || []).join(", ") || "(none)"} — ${(p.role?.selected || []).map((n: string) => p.role?.descriptions?.[n] || "").join("; ")}
 EXPERTISE: domain=${p.expertise?.domainExpertise}, technical=${p.expertise?.technicalProficiency}, productType=${p.expertise?.productTypeFamiliarity}, thisProduct=${p.expertise?.exactProductFamiliarity}
 DECISION BEHAVIORS: ${list(p.decisionBehavior?.selected)}
 INFORMATION NEEDS: ${list(p.informationNeeds?.selected)}

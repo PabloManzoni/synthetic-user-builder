@@ -78,7 +78,7 @@ export default function LiveProfilePreview({ activeStep }: { activeStep: number 
   const dimFor = (relatedStep: number) => focusActive && relatedStep !== activeStep;
 
   const taskLeak = detectTaskLanguage(
-    [...all(p.decisionBehavior), ...all(p.forbiddenAssumptions), ...all(p.frictionTriggers), p.role.roleDescription].join(" ")
+    [...all(p.decisionBehavior), ...all(p.forbiddenAssumptions), ...all(p.frictionTriggers), p.role.selected.map((n) => p.role.descriptions[n] || "").join(" ")].join(" ")
   );
 
   return (
@@ -109,8 +109,11 @@ export default function LiveProfilePreview({ activeStep }: { activeStep: number 
         </div>
         <Field label="Profile name" value={p.profileName} dim={dimFor(0)} />
         <div className="space-y-5" style={dimStyle(dimFor(1))}>
-          <Field label="Reusable role" value={p.role.selectedRole} />
-          <Field label="Role summary" value={p.role.roleDescription} />
+          <Field label="Reusable role" value={p.role.selected.join(", ")} />
+          <Field
+            label="Role summary"
+            value={p.role.selected.map((n) => p.role.descriptions[n]).filter(Boolean).join(" · ")}
+          />
           <Field label="Primary motivation" value={p.primaryMotivation} />
         </div>
         <div className="grid grid-cols-2 gap-4" style={dimStyle(dimFor(2))}>

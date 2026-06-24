@@ -40,7 +40,7 @@ const initialProfile: SyntheticProfile = {
     aiSuggestions: null,
     aiSource: null,
   },
-  role: { selectedRole: "", roleDescription: "", roleSource: "" },
+  role: { selected: [], descriptions: {}, custom: [] },
   expertise: {
     domainExpertise: "",
     technicalProficiency: "",
@@ -76,7 +76,9 @@ type Action =
   | { type: "patchTop"; patch: Partial<Pick<SyntheticProfile, "profileName" | "primaryMotivation">> }
   | { type: "setGeneratedProfile"; value: SyntheticProfile["generated"] }
   | { type: "patchProductContext"; patch: Partial<ProductContext> }
-  | { type: "patchRole"; patch: Partial<RoleSlice> }
+  | { type: "toggleRole"; name: string; description: string }
+  | { type: "addCustomRole"; name: string; description: string }
+  | { type: "removeCustomRole"; name: string }
   | { type: "patchExpertise"; patch: Partial<ExpertiseSlice> }
   | { type: "toggleOption"; key: OptionKey; value: string }
   | { type: "setSelected"; key: OptionKey; values: string[] }
@@ -98,8 +100,38 @@ function reducer(state: SyntheticProfile, action: Action): SyntheticProfile {
       return { ...state, generated: action.value };
     case "patchProductContext":
       return { ...state, productContext: { ...state.productContext, ...action.patch } };
-    case "patchRole":
-      return { ...state, role: { ...state.role, ...action.patch } };
+    case "toggleRole":
+      return {
+        ...state,
+        role: {
+          ...state.role,
+          selected: toggle(state.role.selected, action.name),
+          descriptions: { ...state.role.descriptions, [action.name]: action.description },
+        },
+      };
+    case "addCustomRole": {
+      const name = action.name.trim();
+      if (!name) return state;
+      return {
+        ...state,
+        role: {
+          selected: state.role.selected.includes(name) ? state.role.selected : [...state.role.selected, name],
+          custom: state.role.custom.includes(name) ? state.role.custom : [...state.role.custom, name],
+          descriptions: { ...state.role.descriptions, [name]: action.description },
+        },
+      };
+    }
+    case "removeCustomRole": {
+      const { [action.name]: _drop, ...rest } = state.role.descriptions;
+      return {
+        ...state,
+        role: {
+          selected: state.role.selected.filter((n) => n !== action.name),
+          custom: state.role.custom.filter((n) => n !== action.name),
+          descriptions: rest,
+        },
+      };
+    }
     case "patchExpertise":
       return { ...state, expertise: { ...state.expertise, ...action.patch } };
     case "toggleOption":
@@ -158,7 +190,9 @@ function loadDraft(): SyntheticProfile {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { ...initialProfile, ...parsed, profileName: parsed.profileName || randomProfileName() };
+      // Guard against drafts saved with an older role shape (single → multi-select).
+      const role = Array.isArray(parsed?.role?.selected) ? parsed.role : initialProfile.role;
+      return { ...initialProfile, ...parsed, role, profileName: parsed.profileName || randomProfileName() };
     }
   } catch {
     /* ignore corrupt draft */

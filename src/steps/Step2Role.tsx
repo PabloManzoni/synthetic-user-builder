@@ -15,15 +15,16 @@ export default function Step2Role() {
   const [customName, setCustomName] = useState("");
   const [customDesc, setCustomDesc] = useState("");
 
-  const select = (name: string, description: string, source: "ai" | "generic" | "custom") =>
-    dispatch({ type: "patchRole", patch: { selectedRole: name, roleDescription: description, roleSource: source } });
+  const toggleRole = (name: string, description: string) =>
+    dispatch({ type: "toggleRole", name, description });
+  const isOn = (name: string) => r.selected.includes(name);
 
   const RoleCard = ({ role }: { role: SuggestedRole }) => {
-    const active = r.selectedRole === role.name;
+    const active = isOn(role.name);
     return (
       <button
         type="button"
-        onClick={() => select(role.name, role.description, "ai")}
+        onClick={() => toggleRole(role.name, role.description)}
         className="w-full rounded-xl border px-4 py-3.5 text-left transition-colors"
         style={{
           borderColor: active ? "var(--color-accent)" : "var(--color-border)",
@@ -31,7 +32,19 @@ export default function Step2Role() {
         }}
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-[var(--color-ink)]">{role.name}</span>
+          <span className="flex items-center gap-2 text-sm font-medium text-[var(--color-ink)]">
+            <span
+              className="flex h-4 w-4 items-center justify-center rounded border text-[9px]"
+              style={{
+                borderColor: active ? "var(--color-accent)" : "var(--color-border-strong)",
+                background: active ? "var(--color-accent)" : "transparent",
+                color: "#0b0d10",
+              }}
+            >
+              {active ? "✓" : ""}
+            </span>
+            {role.name}
+          </span>
           <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-info)]">
             AI · {role.confidence}
           </span>
@@ -45,8 +58,14 @@ export default function Step2Role() {
     );
   };
 
+  const selectedDescriptions = r.selected.map((n) => r.descriptions[n] || "").join(" ");
+
   return (
     <>
+      <p className="-mt-2 text-[12px] text-[var(--color-ink-faint)]">
+        You can pick more than one role (AI, common, or custom).
+      </p>
+
       <section>
         <div className="mb-2 flex items-center justify-between">
           <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">AI suggested</h4>
@@ -54,7 +73,7 @@ export default function Step2Role() {
             <AiFillButton
               variant="ai"
               label="Suggest role"
-              onClick={() => select(aiRoles[0].name, aiRoles[0].description, "ai")}
+              onClick={() => !isOn(aiRoles[0].name) && toggleRole(aiRoles[0].name, aiRoles[0].description)}
             />
           )}
         </div>
@@ -73,19 +92,29 @@ export default function Step2Role() {
         <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Common roles</h4>
         <div className="grid grid-cols-2 gap-2">
           {GENERIC_ROLES.map((name) => {
-            const active = r.selectedRole === name;
+            const active = isOn(name);
             return (
               <button
                 key={name}
                 type="button"
-                onClick={() => select(name, `Generic ${name.toLowerCase()} — calibrated through the next steps.`, "generic")}
-                className="rounded-lg border px-3 py-2.5 text-left text-[13px] transition-colors"
+                onClick={() => toggleRole(name, `Generic ${name.toLowerCase()} — calibrated through the next steps.`)}
+                className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] transition-colors"
                 style={{
                   borderColor: active ? "var(--color-accent)" : "var(--color-border)",
                   background: active ? "var(--color-accent-soft)" : "var(--color-surface-2)",
                   color: "var(--color-ink)",
                 }}
               >
+                <span
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px]"
+                  style={{
+                    borderColor: active ? "var(--color-accent)" : "var(--color-border-strong)",
+                    background: active ? "var(--color-accent)" : "transparent",
+                    color: "#0b0d10",
+                  }}
+                >
+                  {active ? "✓" : ""}
+                </span>
                 {name}
               </button>
             );
@@ -95,6 +124,27 @@ export default function Step2Role() {
 
       <section className="space-y-2">
         <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">Custom role</h4>
+        {r.custom.length > 0 && (
+          <div className="mb-1 flex flex-wrap gap-1.5">
+            {r.custom.map((name) => (
+              <span
+                key={name}
+                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px]"
+                style={{ background: "var(--color-accent-soft)", color: "var(--color-ink)" }}
+              >
+                {name}
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: "removeCustomRole", name })}
+                  className="text-[var(--color-ink-faint)] hover:text-[var(--color-action)]"
+                  aria-label={`Remove ${name}`}
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         <input
           value={customName}
           onChange={(e) => setCustomName(e.target.value)}
@@ -113,17 +163,21 @@ export default function Step2Role() {
         <button
           type="button"
           disabled={!customName.trim()}
-          onClick={() => select(customName.trim(), customDesc.trim(), "custom")}
+          onClick={() => {
+            dispatch({ type: "addCustomRole", name: customName.trim(), description: customDesc.trim() });
+            setCustomName("");
+            setCustomDesc("");
+          }}
           className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40"
           style={{ borderColor: "var(--color-border-strong)", color: "var(--color-ink-soft)" }}
         >
-          Use this role
+          Add role
         </button>
       </section>
 
-      {r.selectedRole && (
+      {r.selected.length > 0 && (
         <div className="space-y-3">
-          {detectDemographicOnly(r.roleDescription) && (
+          {detectDemographicOnly(selectedDescriptions) && (
             <WarningBanner tone="warn">
               This describes a person, but not a decision agent. Make sure the role explains how they relate to the
               domain and decide — not their demographics.
@@ -138,7 +192,7 @@ export default function Step2Role() {
                 onClick={() =>
                   dispatch({
                     type: "patchTop",
-                    patch: { primaryMotivation: generatePrimaryMotivation(r.selectedRole, profile.productContext) },
+                    patch: { primaryMotivation: generatePrimaryMotivation(r.selected[0], profile.productContext) },
                   })
                 }
               />

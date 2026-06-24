@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useProfile, DRAFT_KEY } from "./state/profileStore";
 import { WizardNavContext } from "./state/nav";
@@ -16,6 +16,12 @@ export default function App() {
   const [dir, setDir] = useState(1);
   const [visited, setVisited] = useState<Set<number>>(new Set([0]));
   const [saved, setSaved] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+
+  // Reset scroll to the top whenever the step changes.
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [step]);
 
   const go = (next: number) => {
     if (next < 0 || next > LAST) return;
@@ -29,7 +35,7 @@ export default function App() {
   const done = useMemo<boolean[]>(
     () => [
       c.researched || c.researchMode === "skip" || !!(c.clientName || c.manualDescription),
-      !!profile.role.selectedRole,
+      profile.role.selected.length > 0,
       !!profile.expertise.domainExpertise,
       count(profile.decisionBehavior) > 0,
       count(profile.informationNeeds) > 0,
@@ -85,7 +91,7 @@ export default function App() {
         </aside>
 
         {/* Step body */}
-        <main className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
+        <main ref={mainRef} className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
           <motion.div
             key={step}
             initial={{ opacity: 0, x: dir * 24 }}

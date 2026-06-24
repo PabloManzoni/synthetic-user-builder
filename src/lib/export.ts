@@ -4,6 +4,12 @@ import { asciiFace } from "./asciiFace";
 
 // `selected` is the source of truth; custom values are already in `selected` once chosen.
 const list = (s: { selected: string[] }) => Array.from(new Set(s.selected));
+
+const roleName = (p: SyntheticProfile) => p.role.selected.join(", ");
+const roleSummary = (p: SyntheticProfile) =>
+  p.role.selected.length <= 1
+    ? p.role.descriptions[p.role.selected[0]] || ""
+    : p.role.selected.map((n) => `${n}: ${p.role.descriptions[n] || ""}`).join("\n");
 const lines = (text: string) =>
   text
     .split("\n")
@@ -69,8 +75,8 @@ export function toMarkdown(p: SyntheticProfile): string {
     "```",
     "",
     sec("Profile name", p.profileName),
-    sec("Reusable role", p.role.selectedRole),
-    sec("Role summary", p.role.roleDescription),
+    sec("Reusable role", roleName(p)),
+    sec("Role summary", roleSummary(p)),
     sec("Domain expertise", e.domainExpertise),
     sec("Technical proficiency", e.technicalProficiency),
     sec("Product type familiarity", e.productTypeFamiliarity),
@@ -103,8 +109,8 @@ export function toJsonObject(p: SyntheticProfile) {
   return {
     profileName: p.profileName,
     asciiFace: asciiFace(p.profileName),
-    role: p.role.selectedRole,
-    roleSummary: p.role.roleDescription,
+    role: roleName(p),
+    roleSummary: roleSummary(p),
     domainExpertise: p.expertise.domainExpertise,
     technicalProficiency: p.expertise.technicalProficiency,
     productTypeFamiliarity: p.expertise.productTypeFamiliarity,

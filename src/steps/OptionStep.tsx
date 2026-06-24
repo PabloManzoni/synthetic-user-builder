@@ -61,7 +61,7 @@ export default function OptionStep({
   // keeping custom values the user added that aren't part of the recommendation.
   const selectForMe = () => {
     const recoKey = RECO_KEY[stepKey];
-    const chosen = recoKey ? recommendedFor(profile.productContext, recoKey, aiOptions) : aiOptions;
+    const chosen = recoKey ? recommendedFor(profile.productContext, recoKey, aiOptions, common) : aiOptions;
     const customStillSelected = custom.filter((c) => selected.includes(c) && !chosen.includes(c));
     setSelected([...chosen, ...customStillSelected]);
   };

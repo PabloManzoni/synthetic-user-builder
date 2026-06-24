@@ -217,16 +217,36 @@ type RecoKey =
   | "abandonmentRules"
   | "suitableTasks";
 
-function sensibleSubset(all: string[]): string[] {
-  if (all.length <= 3) return all;
-  return all.slice(0, Math.max(2, Math.round(all.length * 0.6)));
+function hash(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
 }
 
-/** The subset "Select for me" should check for a given category. */
-export function recommendedFor(c: ProductContext, key: RecoKey, allShown: string[]): string[] {
-  const reco = c.aiSuggestions?.recommended?.[key];
-  if (reco && reco.length) return reco.filter((x) => allShown.includes(x));
-  return sensibleSubset(allShown);
+/**
+ * The subset "Select for me" should check. Prefers the AI's curated `recommended`
+ * (which can include common options too). Otherwise picks a SCATTERED subset from
+ * the whole pool (AI + common) — not just the first ones — seeded by the context
+ * so it's stable but spread across the list.
+ */
+export function recommendedFor(
+  c: ProductContext,
+  key: RecoKey,
+  aiOptions: string[],
+  common: string[] = []
+): string[] {
+  const pool = Array.from(new Set([...aiOptions, ...common]));
+  const reco = c.aiSuggestions?.recommended?.[key]?.filter((x) => pool.includes(x));
+  if (reco && reco.length) return reco;
+
+  if (pool.length <= 3) return pool;
+  const seed = (c.clientName || "") + (c.productName || "") + key;
+  const ordered = [...pool].sort((a, b) => hash(seed + a) - hash(seed + b));
+  const target = Math.min(pool.length, Math.max(3, Math.round(aiOptions.length * 0.5) || 3));
+  return ordered.slice(0, target);
 }
 
 // ---- Fill-with-AI generators (deterministic mock; see TODO(real-ai)) ----

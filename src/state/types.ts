@@ -60,9 +60,12 @@ export interface ProductContext {
 }
 
 export interface RoleSlice {
-  selectedRole: string;
-  roleDescription: string;
-  roleSource: "ai" | "generic" | "custom" | "";
+  /** Multiple roles can be selected (AI, common, or custom). */
+  selected: string[];
+  /** role name → its description, for export/preview. */
+  descriptions: Record<string, string>;
+  /** Custom role names the user added (the removable pool). */
+  custom: string[];
 }
 
 export interface ExpertiseSlice {
