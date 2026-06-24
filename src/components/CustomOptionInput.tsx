@@ -42,8 +42,7 @@ export default function CustomOptionInput({
       </div>
       {taskLike && (
         <WarningBanner tone="danger">
-          This looks like a task or navigation instruction. Synthetic user profiles should define behavior
-          and constraints, not app steps.
+          This looks like a task step. Describe how the user behaves, not what to click.
         </WarningBanner>
       )}
     </div>

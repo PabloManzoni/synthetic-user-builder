@@ -16,12 +16,12 @@ const color = (v: Verdict) =>
         : "var(--color-risk)";
 const label = (v: Verdict) =>
   v === "strong"
-    ? "Strong"
+    ? "Good"
     : v === "invalid"
-      ? "Invalid"
+      ? "Has problems"
       : v === "incomplete"
         ? "Not filled yet"
-        : "Needs refinement";
+        : "Could be better";
 
 export default function ValidationPanel() {
   const { profile, dispatch } = useProfile();
@@ -41,7 +41,7 @@ export default function ValidationPanel() {
         className="flex items-center justify-between rounded-xl border px-4 py-3"
         style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}
       >
-        <span className="text-sm text-[var(--color-ink-soft)]">Overall profile quality</span>
+        <span className="text-sm text-[var(--color-ink-soft)]">Overall</span>
         <span className="text-sm font-semibold" style={{ color: color(v.overall) }}>
           {label(v.overall)}
         </span>
@@ -116,12 +116,12 @@ export default function ValidationPanel() {
         onClick={() => setNonce((n) => n + 1)}
         className="text-[12px] font-medium text-[var(--color-info)] hover:underline"
       >
-        ↻ Regenerate validation
+        ↻ Re-check
       </button>
 
       {v.overall === "invalid" && (
         <WarningBanner tone="warn">
-          This profile is invalid, but you can still export it. Fix the issues above for a simulation-ready profile.
+          This profile has problems, but you can still export it. Fix the items above to make it ready to use.
         </WarningBanner>
       )}
     </div>

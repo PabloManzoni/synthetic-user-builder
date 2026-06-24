@@ -85,7 +85,7 @@ export default function Step3Expertise() {
       {e.interpretation && (
         <div className="rounded-xl border px-4 py-3" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}>
           <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-info)]">
-            What this combination means (editable)
+            What this means (editable)
           </h4>
           <textarea
             value={e.interpretation}

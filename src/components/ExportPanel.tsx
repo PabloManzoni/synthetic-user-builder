@@ -138,8 +138,8 @@ export default function ExportPanel() {
       </div>
 
       <p className="text-[12px] leading-snug text-[var(--color-ink-faint)]">
-        This exports the reusable profile only — no task objective and no app navigation steps. Pair it with a
-        separate task in your testing tool.
+        This saves the user profile only — no specific task and no screen steps. Add a task separately in your
+        testing tool.
       </p>
     </div>
   );

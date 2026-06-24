@@ -37,10 +37,10 @@ const inputCls =
   "w-full rounded-lg border bg-[var(--color-surface-2)] px-3 py-2.5 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]";
 
 const RESEARCH_STEPS = [
-  "Reading public signals about the product…",
-  "Understanding the domain and users…",
-  "Inferring likely operational roles…",
-  "Tailoring suggestions for every step…",
+  "Looking up the product…",
+  "Getting to know it and its users…",
+  "Working out who uses it…",
+  "Preparing suggestions for each step…",
 ];
 
 export default function Step1ProductContext() {
@@ -113,8 +113,8 @@ export default function Step1ProductContext() {
         <p className="mt-1.5 flex gap-1.5 text-[12px] leading-snug text-[var(--color-ink-faint)]">
           <span aria-hidden>💡</span>
           <span>
-            Paste the product's page, links or a detailed description — the more context you give, the more
-            accurately the AI researches the <em>real</em> app instead of guessing.
+            Paste the product's website, links, or a good description. The more you give, the better the AI
+            understands the <em>real</em> app instead of guessing.
           </span>
         </p>
       </div>
@@ -124,9 +124,9 @@ export default function Step1ProductContext() {
           <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownPrimaryUsers}
                  onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most?" />
         </Labeled>
-        <Labeled label="Known risk areas" optional>
+        <Labeled label="Risk areas" optional>
           <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.knownRiskAreas}
-                 onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if misread?" />
+                 onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if it's misread?" />
         </Labeled>
       </div>
 
@@ -158,7 +158,7 @@ export default function Step1ProductContext() {
                   transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
                 />
               )}
-              {loading ? "Researching with AI…" : c.researched ? "Re-run research" : "Search public context"}
+              {loading ? "Researching with AI…" : c.researched ? "Search again" : "Research with AI"}
             </span>
           </button>
 
@@ -176,7 +176,7 @@ export default function Step1ProductContext() {
               </motion.p>
             ) : (
               <p className="text-center text-[11px] text-[var(--color-ink-faint)]">
-                This shapes the roles, behaviors and AI suggestions across every step.
+                This shapes the suggestions in every step.
               </p>
             )}
           </AnimatePresence>
@@ -194,13 +194,13 @@ export default function Step1ProductContext() {
           >
             {c.researchFailed ? (
               <WarningBanner tone="warn">
-                We could not find enough reliable context. Add more detail or links above, or continue with generic options.
+                Couldn't find enough to go on. Add more detail or links above, or just use the common options.
               </WarningBanner>
             ) : (
               <div className="rounded-xl border px-4 py-3" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}>
                 <div className="mb-1.5 flex items-center justify-between">
                   <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-info)]">
-                    AI understanding (editable)
+                    What the AI understood (editable)
                   </h4>
                   <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
                     {c.aiSource === "ai" ? "Gemini" : "offline mock"}
@@ -214,7 +214,7 @@ export default function Step1ProductContext() {
                   onChange={(e) => patch({ aiSummary: e.target.value })}
                 />
                 <p className="mt-2 text-[11px] text-[var(--color-ink-faint)]">
-                  AI suggestions are not facts — edit or reject anything that looks wrong.
+                  The AI can be wrong — edit or delete anything that looks off.
                 </p>
               </div>
             )}
@@ -225,7 +225,7 @@ export default function Step1ProductContext() {
       <div className="pt-1 text-center">
         {c.researchMode === "skip" ? (
           <span className="text-[12px] text-[var(--color-ink-faint)]">
-            Skipped — using generic options.{" "}
+            Skipped — using common options.{" "}
             <button type="button" onClick={() => patch({ researchMode: "search" })} className="text-[var(--color-info)] underline underline-offset-2">
               Undo
             </button>
@@ -236,7 +236,7 @@ export default function Step1ProductContext() {
             onClick={() => patch({ researchMode: "skip" })}
             className="text-[12px] text-[var(--color-ink-faint)] underline underline-offset-2 hover:text-[var(--color-ink-soft)]"
           >
-            Skip product context →
+            Skip this step →
           </button>
         )}
       </div>

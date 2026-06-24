@@ -74,7 +74,7 @@ export default function Step2Role() {
   return (
     <>
       <p className="-mt-2 text-[12px] text-[var(--color-ink-faint)]">
-        You can pick more than one role (AI, common, or custom).
+        You can pick more than one role.
       </p>
 
       <section>
@@ -114,7 +114,7 @@ export default function Step2Role() {
             onClick={() => {
               const pool = [...GENERIC_ROLES].sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 2));
               pool.forEach((name) =>
-                !isOn(name) && toggleRole(name, `Generic ${name.toLowerCase()} — calibrated through the next steps.`)
+                !isOn(name) && toggleRole(name, `A general ${name.toLowerCase()} — you'll shape this in the next steps.`)
               );
             }}
           />
@@ -126,7 +126,7 @@ export default function Step2Role() {
               <button
                 key={name}
                 type="button"
-                onClick={() => toggleRole(name, `Generic ${name.toLowerCase()} — calibrated through the next steps.`)}
+                onClick={() => toggleRole(name, `A general ${name.toLowerCase()} — you'll shape this in the next steps.`)}
                 className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-[13px] transition-colors"
                 style={{
                   borderColor: active ? "var(--color-accent)" : "var(--color-border)",
@@ -187,7 +187,7 @@ export default function Step2Role() {
         <textarea
           value={customDesc}
           onChange={(e) => setCustomDesc(e.target.value)}
-          placeholder="What does this role usually do? (relationship to the domain, not a task)"
+          placeholder="What does this person usually do? (their role, not a single task)"
           rows={3}
           className="w-full rounded-lg border bg-[var(--color-surface-2)] px-3 py-2.5 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)]"
           style={{ borderColor: "var(--color-border)" }}
@@ -211,8 +211,8 @@ export default function Step2Role() {
         <div className="space-y-3">
           {detectDemographicOnly(selectedDescriptions) && (
             <WarningBanner tone="warn">
-              This describes a person, but not a decision agent. Make sure the role explains how they relate to the
-              domain and decide — not their demographics.
+              This sounds like a person's bio, not how they behave. Describe what they do and how they decide —
+              not their age or background.
             </WarningBanner>
           )}
           <label className="block">

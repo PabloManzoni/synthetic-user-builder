@@ -152,7 +152,7 @@ export default function OptionStep({
               description={
                 levelTouched
                   ? `${intensity.levelDescs[level]} · ${poolSelected} selected`
-                  : "Set how much this matters in one move — or fine-tune the exact items below."
+                  : "Set this in one move — or pick exact items below."
               }
               onSelect={setLevel}
             />
@@ -164,7 +164,7 @@ export default function OptionStep({
               onClick={() => setShowItems((v) => !v)}
               className="text-[12px] font-medium text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink-soft)]"
             >
-              {showItems ? "▾ Hide individual items" : `▸ Fine-tune individual items${total ? ` (${total} selected)` : ""}`}
+              {showItems ? "▾ Hide the full list" : `▸ Pick exact items${total ? ` (${total} selected)` : ""}`}
             </button>
             {showItems && (
               <div className="mt-4">

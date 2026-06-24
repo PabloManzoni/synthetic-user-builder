@@ -136,11 +136,11 @@ export default function LiveProfilePreview({
         </div>
         <Chips label="Decision behavior" items={all(p.decisionBehavior)} dim={dimFor(3)} />
         <Chips label="Emotional & trust" items={all(p.emotionalBehavior)} dim={dimFor(3)} />
-        <Chips label="Information needs" items={all(p.informationNeeds)} dim={dimFor(4)} />
-        <Chips label="Constraints" items={all(p.constraints)} dim={dimFor(4)} />
-        <Chips label="Forbidden assumptions" items={all(p.forbiddenAssumptions)} tone="var(--color-action)" dim={dimFor(4)} />
-        <Chips label="Friction triggers" items={all(p.frictionTriggers)} tone="var(--color-risk)" dim={dimFor(5)} />
-        <Chips label="Abandonment & escalation" items={all(p.abandonmentRules)} dim={dimFor(5)} />
+        <Chips label="Needs to see" items={all(p.informationNeeds)} dim={dimFor(4)} />
+        <Chips label="Limits" items={all(p.constraints)} dim={dimFor(4)} />
+        <Chips label="Won't guess" items={all(p.forbiddenAssumptions)} tone="var(--color-action)" dim={dimFor(4)} />
+        <Chips label="What trips them up" items={all(p.frictionTriggers)} tone="var(--color-risk)" dim={dimFor(5)} />
+        <Chips label="When they stop or ask for help" items={all(p.abandonmentRules)} dim={dimFor(5)} />
         <Chips
           label="Suitable tasks"
           items={[...p.taskSuitability.suitable, ...p.taskSuitability.customSuitable]}
@@ -159,8 +159,8 @@ export default function LiveProfilePreview({
             style={{ background: "var(--color-action-soft)", color: "var(--color-action)" }}
           >
             {taskLeak
-              ? "Task / navigation language detected — keep the profile behavioral."
-              : "No forbidden assumptions yet — the profile is likely too weak."}
+              ? "This sounds like task steps — keep it about behavior, not screens."
+              : "Nothing they won't guess yet — the profile is still weak."}
           </div>
         )}
       </div>

@@ -174,65 +174,65 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   ].filter(Boolean).length;
   dims.push({
     key: "completeness",
-    label: "Profile completeness",
+    label: "How complete it is",
     step: 1,
     verdict: filledSlices >= 9 ? "strong" : "incomplete",
     explanation:
       filledSlices >= 9
-        ? "All core dimensions are filled in."
-        : `${10 - filledSlices} core dimension(s) still to fill.`,
+        ? "Everything important is filled in."
+        : `${10 - filledSlices} important part(s) still empty.`,
   });
 
   // 2. Role clarity
   const roleDemographic = detectDemographicOnly(roleText);
   dims.push({
     key: "roleClarity",
-    label: "Role clarity",
+    label: "Clear role",
     step: 1,
     verdict: !roleSelected ? "incomplete" : roleDemographic ? "refine" : "strong",
     explanation: !roleSelected
-      ? "No role selected yet."
+      ? "No role picked yet."
       : roleDemographic
-        ? "Role reads as a demographic description, not a decision agent."
-        : "Role describes a clear relationship to the domain.",
+        ? "This reads like a bio, not how they behave."
+        : "The role is clear.",
   });
   if (roleDemographic)
-    issues.push("The role describes a person, but not a decision agent. Add decision behavior and constraints.");
+    issues.push("The role reads like a bio. Add how they behave and what limits them.");
 
   // 3. Constraint strength
   dims.push({
     key: "constraints",
-    label: "Constraint strength",
+    label: "Has limits",
     step: 4,
     verdict: constraintCount >= 3 ? "strong" : constraintCount >= 1 ? "refine" : "incomplete",
     explanation:
       constraintCount >= 3
-        ? "Constraints meaningfully bound the agent."
+        ? "Good limits in place."
         : constraintCount >= 1
-          ? "Some constraints present; consider adding more."
-          : "No constraints yet — add some so the agent stays bounded.",
+          ? "A few limits — consider adding more."
+          : "No limits yet — add some so the user stays grounded.",
   });
-  if (constraintCount === 0) issues.push("Constraints are too weak. Add what the agent may and may not use.");
+  if (constraintCount === 0) issues.push("Limits are too weak. Add what the user can and can't rely on.");
 
   // 4. Forbidden assumption quality
   dims.push({
     key: "forbidden",
-    label: "Forbidden assumption quality",
+    label: "Won't guess too much",
     step: 4,
     verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 1 ? "refine" : "incomplete",
     explanation:
       forbiddenCount >= 4
-        ? "Strong set of forbidden assumptions."
+        ? "Good set of things they won't guess."
         : forbiddenCount >= 1
-          ? "A few forbidden assumptions; more would harden the profile."
-          : "None yet — add some so the agent doesn't compensate for missing UI info.",
+          ? "A few — adding more makes the profile stronger."
+          : "None yet — add some so the user doesn't guess to fill gaps.",
   });
   if (forbiddenCount === 0) {
     issues.push(
-      "This profile is likely too weak. Add forbidden assumptions to prevent the synthetic user from compensating for missing interface information."
+      "The profile is still weak. Add things the user should never guess, so the test stays realistic."
     );
     suggestedFixes.push({
-      label: "Add: cannot infer thresholds, status, or next actions unless visible",
+      label: "Add: don't guess status or next steps unless they're shown",
       assumption: "Cannot assume the next action unless visible or clearly implied",
     });
   }
@@ -241,86 +241,86 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
   const taskLeak = detectTaskLanguage(allText);
   dims.push({
     key: "overguidance",
-    label: "Risk of overguidance",
+    label: "No task steps",
     step: 3,
     // (decision behavior lives in step 3 "Behavior & trust")
     verdict: taskLeak ? "invalid" : allText.trim() ? "strong" : "incomplete",
     explanation: taskLeak
-      ? "Profile contains task or navigation language. Remove product-specific steps."
+      ? "This has task or click-by-click steps. Remove them."
       : allText.trim()
-        ? "No task or navigation steps detected. Profile stays behavioral."
-        : "Nothing to check yet — add behavior and constraints.",
+        ? "No task steps — good, it stays about behavior."
+        : "Nothing to check yet — add behavior and limits.",
   });
   if (taskLeak)
-    issues.push("The profile includes task or navigation instructions. It must define behavior, not app steps.");
+    issues.push("This includes task or click steps. It should describe behavior, not what to click.");
 
   // 6. Risk of being too generic
   const totalSignals = behaviorCount + infoCount + constraintCount + forbiddenCount + frictionCount;
   dims.push({
     key: "tooGeneric",
-    label: "Risk of being too generic",
+    label: "Specific enough",
     step: 3,
     verdict: totalSignals >= 12 ? "strong" : totalSignals > 0 ? "refine" : "incomplete",
     explanation:
       totalSignals >= 12
-        ? "Enough specific behavior to drive distinct simulation."
+        ? "Specific enough to feel like a real person."
         : totalSignals > 0
-          ? "Add more specific behavior so the profile isn't too generic."
-          : "Add behavior, information needs and constraints to give it substance.",
+          ? "Add more specifics so it doesn't feel generic."
+          : "Add behavior, needs and limits to give it substance.",
   });
 
   // 7. Risk of being too smart
   const backend = detectBackendKnowledge(allText);
   dims.push({
     key: "tooSmart",
-    label: "Risk of being too smart",
+    label: "Not too smart",
     step: 4,
     verdict: backend ? "refine" : forbiddenCount >= 3 ? "strong" : forbiddenCount > 0 ? "refine" : "incomplete",
     explanation: backend
-      ? "Profile grants internal/backend knowledge the agent should not have."
+      ? "This gives the user behind-the-scenes knowledge they shouldn't have."
       : forbiddenCount >= 3
-        ? "Forbidden assumptions keep the agent from knowing too much."
-        : "Add forbidden assumptions so the agent does not over-reason.",
+        ? "Good — they won't know more than a real person would."
+        : "Add things they won't guess so they don't overthink.",
   });
   if (backend)
     issues.push(
-      "This may create artificial compensation. The user should not know backend logic or undeclared business rules."
+      "This makes the test unrealistic. The user shouldn't know behind-the-scenes logic or hidden rules."
     );
 
   // 8. Risk of compensation
   dims.push({
     key: "compensation",
-    label: "Risk of compensating for interface gaps",
+    label: "Won't fill gaps on its own",
     step: 4,
     verdict: forbiddenCount >= 4 ? "strong" : forbiddenCount >= 1 ? "refine" : "incomplete",
     explanation:
       forbiddenCount >= 4
-        ? "Forbidden assumptions prevent the agent from filling gaps the UI leaves."
-        : "Add forbidden assumptions so the agent doesn't guess when data is missing.",
+        ? "Good — they won't fill in gaps the screen leaves."
+        : "Add things they won't guess so they don't make up missing info.",
   });
   if (forbiddenCount >= 1 && forbiddenCount < 4)
     suggestedFixes.push({
-      label: "Add: cannot mentally fix missing interface information",
+      label: "Add: don't mentally fill in missing info",
       assumption: "Cannot mentally fix missing interface information",
     });
 
   // 9. Task independence
   dims.push({
     key: "taskIndependence",
-    label: "Task independence",
+    label: "Not tied to one task",
     step: 6,
     verdict: taskLeak ? "invalid" : allText.trim() ? "strong" : "incomplete",
     explanation: taskLeak
-      ? "Profile is bound to a specific task or flow."
+      ? "This is tied to one specific task or flow."
       : allText.trim()
-        ? "Profile is independent of any specific task."
-        : "Add behavior so independence can be assessed.",
+        ? "Works across tasks, not just one."
+        : "Add behavior so we can check this.",
   });
 
   // 10. Reusability
   dims.push({
     key: "reusability",
-    label: "Reusability",
+    label: "Reusable",
     step: 6,
     verdict:
       roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak
@@ -330,8 +330,8 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
           : "refine",
     explanation:
       roleSelected && p.taskSuitability.suitable.length > 0 && !taskLeak
-        ? "Reusable across multiple tasks of the suitable types."
-        : "Define suitable task types and keep it task-independent to maximize reuse.",
+        ? "Reusable across many tasks it fits."
+        : "Pick where it fits and keep it task-free so you can reuse it.",
   });
 
   // 11. Simulation readiness
@@ -342,17 +342,17 @@ export function validateProfile(p: SyntheticProfile): ValidationResult {
       : worst(forbiddenCount >= 3 ? "strong" : "refine", totalSignals >= 10 ? "strong" : "refine");
   dims.push({
     key: "readiness",
-    label: "Simulation readiness",
+    label: "Ready to use",
     step: 4,
     verdict: readiness,
     explanation:
       readiness === "strong"
-        ? "Ready to pair with a separate task objective in a simulation."
+        ? "Ready to pair with a task in your testing tool."
         : readiness === "invalid"
-          ? "Not ready: remove task language and strengthen constraints."
+          ? "Not ready: remove task steps and add stronger limits."
           : readiness === "incomplete"
-            ? "Fill in behavior and constraints to assess readiness."
-            : "Almost ready: harden constraints and add specific behavior.",
+            ? "Add behavior and limits to check this."
+            : "Almost there: add stronger limits and more specific behavior.",
   });
 
   const overall = dims.reduce<Verdict>((acc, d) => worst(acc, d.verdict), "strong");

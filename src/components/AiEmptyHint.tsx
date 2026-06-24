@@ -19,7 +19,7 @@ export default function AiEmptyHint({ what = "AI suggestions" }: { what?: string
       >
         Product context
       </button>{" "}
-      to see {what} here. You can also use the common options below.
+      to get {what}. Or just use the common options below.
     </p>
   );
 }
