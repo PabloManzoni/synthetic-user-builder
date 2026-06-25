@@ -38,7 +38,7 @@ function mockResearch(c: ProductContext): ResearchResult {
   return {
     summary:
       `AI research is unavailable right now, so there are no tailored suggestions for ${label}. ` +
-      `You can describe the product below and use the common options (or Randomize) in each step.`,
+      `You can describe the product below and use the common options (or Choose with AI) in each step.`,
     confidence: "low",
     failed: false,
     description: "",

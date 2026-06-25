@@ -71,11 +71,23 @@ export default function Step2Role() {
 
   const selectedDescriptions = r.selected.map((n) => r.descriptions[n] || "").join(" ");
 
+  // Choose with AI: pick the top AI-suggested role for this product (deterministic fallback).
+  const chooseWithAi = () => {
+    const top = aiRoles[0];
+    if (top) {
+      if (!isOn(top.name)) toggleRole(top.name, top.description);
+    } else {
+      const name = GENERIC_ROLES[0];
+      if (!isOn(name)) toggleRole(name, `A general ${name.toLowerCase()} — shaped for this profile.`);
+    }
+  };
+
   return (
     <>
-      <p className="-mt-2 text-[12px] text-[var(--color-ink-faint)]">
-        You can pick more than one role.
-      </p>
+      <div className="-mt-2 flex items-center justify-between gap-3">
+        <p className="text-[12px] text-[var(--color-ink-faint)]">You can pick more than one role.</p>
+        <AiFillButton variant="ai" label="Choose with AI" onClick={chooseWithAi} />
+      </div>
 
       <section>
         <div className="mb-2 flex items-center justify-between">
@@ -83,13 +95,6 @@ export default function Step2Role() {
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-info)" }} />
             AI suggested
           </h4>
-          {aiRoles.length > 0 && (
-            <AiFillButton
-              variant="ai"
-              label="Suggest role"
-              onClick={() => !isOn(aiRoles[0].name) && toggleRole(aiRoles[0].name, aiRoles[0].description)}
-            />
-          )}
         </div>
         {aiRoles.length > 0 ? (
           <div className="space-y-2">
@@ -164,16 +169,6 @@ export default function Step2Role() {
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-border-strong)" }} />
             Common roles
           </h4>
-          <AiFillButton
-            variant="random"
-            label="Randomize"
-            onClick={() => {
-              const pool = [...GENERIC_ROLES].sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 2));
-              pool.forEach((name) =>
-                !isOn(name) && toggleRole(name, `A general ${name.toLowerCase()} — you'll shape this in the next steps.`)
-              );
-            }}
-          />
         </div>
         <div className="grid grid-cols-2 gap-2">
           {GENERIC_ROLES.map((name) => {

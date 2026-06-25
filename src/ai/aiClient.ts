@@ -63,16 +63,27 @@ export type RefineTarget =
   | "motivation"
   | "decisionBehaviors"
   | "informationNeeds"
+  | "constraints"
   | "forbiddenAssumptions"
   | "frictionTriggers"
   | "emotionalBehaviors"
   | "abandonmentRules"
-  | "suitableTasks";
+  | "suitableTasks"
+  | "unsuitableTasks"
+  | "expertise"
+  | "behaviorAxes";
 
 export interface RefineResponse {
   motivation?: string;
   suggestions?: string[];
   recommended?: string[];
+  expertise?: {
+    domainExpertise?: string;
+    technicalProficiency?: string;
+    productTypeFamiliarity?: string;
+    exactProductFamiliarity?: string;
+  };
+  behaviorAxes?: Record<string, number>;
 }
 
 /** Context-aware refine using the full profile so far. Null if unavailable. */
@@ -81,7 +92,8 @@ export async function refineField(
   target: RefineTarget
 ): Promise<RefineResponse | null> {
   const data = (await postJson("/api/refine", { profile, target })) as RefineResponse | null;
-  if (!data || (!data.motivation && !Array.isArray(data.suggestions))) return null;
+  if (!data || (!data.motivation && !Array.isArray(data.suggestions) && !data.expertise && !data.behaviorAxes))
+    return null;
   return data;
 }
 

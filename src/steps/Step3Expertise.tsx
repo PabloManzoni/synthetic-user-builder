@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useProfile } from "../state/profileStore";
 import { generateExpertiseInterpretation } from "../ai/mockAi";
-import { randomFrom } from "../lib/random";
+import { chooseExpertise } from "../ai/choose";
 import AiFillButton from "../components/AiFillButton";
 import {
   DOMAIN_EXPERTISE_LEVELS,
@@ -64,18 +64,22 @@ export default function Step3Expertise() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [e.domainExpertise, e.technicalProficiency, e.productTypeFamiliarity, e.exactProductFamiliarity]);
 
-  const randomizeAll = () =>
-    patch({
-      domainExpertise: randomFrom(DOMAIN_EXPERTISE_LEVELS),
-      technicalProficiency: randomFrom(TECHNICAL_LEVELS),
-      productTypeFamiliarity: randomFrom(PRODUCT_TYPE_FAMILIARITY),
-      exactProductFamiliarity: randomFrom(EXACT_PRODUCT_FAMILIARITY),
-    });
+  const [choosing, setChoosing] = useState(false);
+  const chooseWithAi = async () => {
+    setChoosing(true);
+    patch(await chooseExpertise(profile));
+    setChoosing(false);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        <AiFillButton variant="random" label="Randomize all" onClick={randomizeAll} />
+        <AiFillButton
+          variant="ai"
+          label={choosing ? "Choosing…" : "Choose with AI"}
+          onClick={chooseWithAi}
+          disabled={choosing}
+        />
       </div>
       <ScaleRow label="Domain expertise" options={DOMAIN_EXPERTISE_LEVELS} value={e.domainExpertise} onChange={(v) => patch({ domainExpertise: v })} />
       <ScaleRow label="Technical proficiency" options={TECHNICAL_LEVELS} value={e.technicalProficiency} onChange={(v) => patch({ technicalProficiency: v })} />

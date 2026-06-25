@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useProfile } from "../state/profileStore";
-import { suggestSuitableTasks, recommendedFor } from "../ai/mockAi";
-import { refineField } from "../ai/aiClient";
+import { suggestSuitableTasks } from "../ai/mockAi";
+import { chooseOptions } from "../ai/choose";
 import { GENERIC_SUITABLE_TASKS, GENERIC_UNSUITABLE_TASKS } from "../ai/genericOptions";
 import SelectableOption from "../components/SelectableOption";
 import CustomOptionInput from "../components/CustomOptionInput";
-import AiFillButton from "../components/AiFillButton";
 import AiEmptyHint from "../components/AiEmptyHint";
 import MultiSection from "../components/MultiSection";
-import { randomSubset } from "../lib/random";
 
 function GroupLabel({ label, tone }: { label: string; tone?: string }) {
   return (
@@ -26,21 +24,7 @@ export default function Step10TaskSuitability() {
   const { profile, dispatch } = useProfile();
   const t = profile.taskSuitability;
   const aiSuitable = suggestSuitableTasks(profile.productContext);
-  const [regenerating, setRegenerating] = useState(false);
-
-  const regenerateSuitable = async () => {
-    setRegenerating(true);
-    const res = await refineField(profile, "suitableTasks");
-    if (res?.suggestions) {
-      dispatch({
-        type: "setCategorySuggestions",
-        category: "suitableTasks",
-        suggestions: res.suggestions,
-        recommended: res.recommended ?? [],
-      });
-    }
-    setRegenerating(false);
-  };
+  const [choosing, setChoosing] = useState(false);
 
   const toggle = (field: "suitable" | "unsuitable", value: string) =>
     dispatch({ type: "toggleTask", field, value });
@@ -53,63 +37,32 @@ export default function Step10TaskSuitability() {
   const removeCustom = (field: "customSuitable" | "customUnsuitable", value: string) =>
     dispatch({ type: "patchTaskSuitability", patch: { [field]: t[field].filter((x) => x !== value) } });
 
-  const suitableActions = (
-    <div className="flex items-center gap-3">
-      <AiFillButton
-        variant="random"
-        label="Randomize"
-        onClick={() => {
-          const pool = [...GENERIC_SUITABLE_TASKS].sort(() => Math.random() - 0.5).slice(0, 3 + Math.floor(Math.random() * 2));
-          dispatch({ type: "patchTaskSuitability", patch: { suitable: [...pool, ...t.customSuitable.filter((c) => t.suitable.includes(c))] } });
-        }}
-      />
-      {aiSuitable.length > 0 && (
-        <button
-          type="button"
-          onClick={regenerateSuitable}
-          disabled={regenerating}
-          className="text-[11px] font-medium text-[var(--color-info)] hover:underline disabled:opacity-60"
-          title="Re-query using everything you've chosen so far"
-        >
-          {regenerating ? "Regenerating…" : "↻ Regenerate"}
-        </button>
-      )}
-      {aiSuitable.length > 0 && (
-        <AiFillButton
-          variant="ai"
-          label="Select for me"
-          onClick={() => {
-            const chosen = recommendedFor(profile.productContext, "suitableTasks", aiSuitable, GENERIC_SUITABLE_TASKS);
-            dispatch({
-              type: "patchTaskSuitability",
-              patch: { suitable: [...chosen, ...t.customSuitable.filter((c) => t.suitable.includes(c))] },
-            });
-          }}
-        />
-      )}
-    </div>
-  );
-
-  const randomizeAll = () => {
+  const chooseAll = async () => {
+    setChoosing(true);
+    const [suit, unsuit] = await Promise.all([
+      chooseOptions(profile, "suitableTasks", GENERIC_SUITABLE_TASKS, 3),
+      chooseOptions(profile, "unsuitableTasks", GENERIC_UNSUITABLE_TASKS, 2),
+    ]);
     dispatch({
       type: "patchTaskSuitability",
       patch: {
-        suitable: [...randomSubset(GENERIC_SUITABLE_TASKS), ...t.customSuitable.filter((c) => t.suitable.includes(c))],
-        unsuitable: [...randomSubset(GENERIC_UNSUITABLE_TASKS, 2, 4), ...t.customUnsuitable.filter((c) => t.unsuitable.includes(c))],
+        suitable: [...suit, ...t.customSuitable.filter((c) => t.suitable.includes(c))],
+        unsuitable: [...unsuit, ...t.customUnsuitable.filter((c) => t.unsuitable.includes(c))],
       },
     });
+    setChoosing(false);
   };
 
   return (
     <MultiSection
-      onRandomize={randomizeAll}
+      onChoose={chooseAll}
+      choosing={choosing}
       sections={[
         {
           key: "suitable",
           title: "Suitable task types",
           titleColor: "var(--color-ok)",
           done: t.suitable.length + t.customSuitable.length > 0,
-          actions: suitableActions,
           render: () => (
             <div className="space-y-3">
               <GroupLabel label="Custom" />

@@ -8,9 +8,9 @@ import ExportPanel from "../components/ExportPanel";
 import AiEmptyHint from "../components/AiEmptyHint";
 import BehaviorAxes from "../components/BehaviorAxes";
 import MultiSection from "../components/MultiSection";
+import { useState } from "react";
 import { useProfile } from "../state/profileStore";
-import { BEHAVIOR_AXES } from "../ai/behaviorAxes";
-import { randomSubset } from "../lib/random";
+import { chooseOptions, chooseBehaviorAxes } from "../ai/choose";
 import {
   suggestInformationNeeds,
   suggestForbiddenAssumptions,
@@ -46,15 +46,19 @@ const hasData = (s: { selected: string[]; custom: string[] }) => s.selected.leng
 
 function BehaviorStep() {
   const { profile, dispatch } = useProfile();
-  const randomizeAll = () => {
-    BEHAVIOR_AXES.forEach((a) =>
-      dispatch({ type: "setBehaviorAxis", key: a.key, value: Math.floor(Math.random() * 5) })
-    );
-    dispatch({ type: "setSelected", key: "emotionalBehavior", values: randomSubset(GENERIC_EMOTIONAL_BEHAVIORS) });
+  const [choosing, setChoosing] = useState(false);
+  const chooseAll = async () => {
+    setChoosing(true);
+    const axes = await chooseBehaviorAxes(profile);
+    Object.entries(axes).forEach(([key, value]) => dispatch({ type: "setBehaviorAxis", key, value }));
+    const emo = await chooseOptions(profile, "emotionalBehaviors", GENERIC_EMOTIONAL_BEHAVIORS);
+    dispatch({ type: "setSelected", key: "emotionalBehavior", values: emo });
+    setChoosing(false);
   };
   return (
     <MultiSection
-      onRandomize={randomizeAll}
+      onChoose={chooseAll}
+      choosing={choosing}
       sections={[
         {
           key: "decision",
@@ -86,14 +90,23 @@ function BehaviorStep() {
 
 function InfoLimitsStep() {
   const { profile, dispatch } = useProfile();
-  const randomizeAll = () => {
-    dispatch({ type: "setSelected", key: "informationNeeds", values: randomSubset(GENERIC_INFORMATION_NEEDS) });
-    dispatch({ type: "setSelected", key: "constraints", values: randomSubset(GENERIC_CONSTRAINTS, 2, 4) });
-    dispatch({ type: "setSelected", key: "forbiddenAssumptions", values: randomSubset(GENERIC_FORBIDDEN_ASSUMPTIONS, 4, 7) });
+  const [choosing, setChoosing] = useState(false);
+  const chooseAll = async () => {
+    setChoosing(true);
+    const [info, cons, forb] = await Promise.all([
+      chooseOptions(profile, "informationNeeds", GENERIC_INFORMATION_NEEDS, 4),
+      chooseOptions(profile, "constraints", GENERIC_CONSTRAINTS, 3),
+      chooseOptions(profile, "forbiddenAssumptions", GENERIC_FORBIDDEN_ASSUMPTIONS, 4),
+    ]);
+    dispatch({ type: "setSelected", key: "informationNeeds", values: info });
+    dispatch({ type: "setSelected", key: "constraints", values: cons });
+    dispatch({ type: "setSelected", key: "forbiddenAssumptions", values: forb });
+    setChoosing(false);
   };
   return (
     <MultiSection
-      onRandomize={randomizeAll}
+      onChoose={chooseAll}
+      choosing={choosing}
       sections={[
         {
           key: "info",
@@ -185,13 +198,21 @@ function InfoLimitsStep() {
 
 function FrictionStep() {
   const { profile, dispatch } = useProfile();
-  const randomizeAll = () => {
-    dispatch({ type: "setSelected", key: "frictionTriggers", values: randomSubset(GENERIC_FRICTION_TRIGGERS) });
-    dispatch({ type: "setSelected", key: "abandonmentRules", values: randomSubset(GENERIC_ABANDONMENT_RULES) });
+  const [choosing, setChoosing] = useState(false);
+  const chooseAll = async () => {
+    setChoosing(true);
+    const [fr, ab] = await Promise.all([
+      chooseOptions(profile, "frictionTriggers", GENERIC_FRICTION_TRIGGERS),
+      chooseOptions(profile, "abandonmentRules", GENERIC_ABANDONMENT_RULES),
+    ]);
+    dispatch({ type: "setSelected", key: "frictionTriggers", values: fr });
+    dispatch({ type: "setSelected", key: "abandonmentRules", values: ab });
+    setChoosing(false);
   };
   return (
     <MultiSection
-      onRandomize={randomizeAll}
+      onChoose={chooseAll}
+      choosing={choosing}
       sections={[
         {
           key: "friction",

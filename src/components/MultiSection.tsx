@@ -21,11 +21,13 @@ const divider = <div className="h-px" style={{ background: "var(--color-border)"
 // view (scroll-spy) and clicking jumps to it. Each section shows ✓ when filled.
 export default function MultiSection({
   sections,
-  onRandomize,
+  onChoose,
+  choosing = false,
 }: {
   sections: SectionDef[];
-  /** When set, a "Randomize all" button appears in the sticky strip. */
-  onRandomize?: () => void;
+  /** When set, a "Choose with AI" button appears in the sticky strip (fills the whole step). */
+  onChoose?: () => void;
+  choosing?: boolean;
 }) {
   const [active, setActive] = useState(sections[0]?.key);
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -69,9 +71,14 @@ export default function MultiSection({
           <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-faint)]">
             {sections.length} sections
           </span>
-          {onRandomize && (
+          {onChoose && (
             <span className="mr-1">
-              <AiFillButton variant="random" label="Randomize all" onClick={onRandomize} />
+              <AiFillButton
+                variant="ai"
+                label={choosing ? "Choosing…" : "Choose with AI"}
+                onClick={onChoose}
+                disabled={choosing}
+              />
             </span>
           )}
           {sections.map((s, i) => {

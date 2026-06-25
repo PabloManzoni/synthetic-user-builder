@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useProfile, type OptionKey, type SuggestionCategory } from "../state/profileStore";
+import { useProfile, type OptionKey } from "../state/profileStore";
 import { useOptionStep } from "../lib/useOptionStep";
 import OptionGroup from "../components/OptionGroup";
 import SpectrumSlider from "../components/SpectrumSlider";
 import WarningBanner from "../components/WarningBanner";
-import { recommendedFor } from "../ai/mockAi";
-import { refineField } from "../ai/aiClient";
 import type { ProductContext } from "../state/types";
 
 export interface IntensityConfig {
@@ -23,16 +21,6 @@ function levelCounts(n: number): number[] {
   c[c.length - 1] = n;
   return c;
 }
-
-// Map the step's slice key to the AI suggestion category for "Select for me".
-const RECO_KEY: Record<string, Parameters<typeof recommendedFor>[1] | undefined> = {
-  decisionBehavior: "decisionBehaviors",
-  informationNeeds: "informationNeeds",
-  forbiddenAssumptions: "forbiddenAssumptions",
-  frictionTriggers: "frictionTriggers",
-  emotionalBehavior: "emotionalBehaviors",
-  abandonmentRules: "abandonmentRules",
-};
 
 export default function OptionStep({
   stepKey,
@@ -58,29 +46,11 @@ export default function OptionStep({
   /** When set, the section leads with an intensity slider and collapses the item lists. */
   intensity?: IntensityConfig;
 }) {
-  const { profile, dispatch } = useProfile();
+  const { profile } = useProfile();
   const { slice, selected, custom, toggle, addCustom, removeCustom, setGenerated, setSelected } =
     useOptionStep(stepKey);
   const aiOptions = aiSuggest(profile.productContext);
-  const [regenerating, setRegenerating] = useState(false);
   const [showItems, setShowItems] = useState(false);
-
-  // Context-aware regenerate: re-query Gemini using everything chosen so far.
-  const regenerate = async () => {
-    const cat = RECO_KEY[stepKey] as SuggestionCategory | undefined;
-    if (!cat) return;
-    setRegenerating(true);
-    const res = await refineField(profile, cat);
-    if (res?.suggestions) {
-      dispatch({
-        type: "setCategorySuggestions",
-        category: cat,
-        suggestions: res.suggestions,
-        recommended: res.recommended ?? [],
-      });
-    }
-    setRegenerating(false);
-  };
 
   // Keep generated text in sync with selections, but never clobber manual edits.
   // Generate only from selected values (custom chips count once they are selected).
@@ -98,8 +68,8 @@ export default function OptionStep({
   const total = effective.length;
 
   // Intensity slider: 5 stops map to cumulative bundles drawn from the pool
-  // (AI-suggested items first, then common). Lets the user set "how much" in one
-  // click instead of ticking many boxes; the item lists stay available to fine-tune.
+  // (AI-suggested items first, then common). A manual control to set "how much" in
+  // one move; the item lists stay available to fine-tune. (Choosing with AI is step-level.)
   const pool = Array.from(new Set([...aiOptions, ...common]));
   const counts = levelCounts(pool.length);
   const poolSelected = selected.filter((s) => pool.includes(s)).length;
@@ -114,24 +84,6 @@ export default function OptionStep({
   const setLevel = (i: number) => {
     const customSelected = custom.filter((c) => selected.includes(c));
     setSelected([...pool.slice(0, counts[i]), ...customSelected]);
-  };
-
-  // AI picks a curated SUBSET (not every option), replacing the selection but
-  // keeping custom values the user added that aren't part of the recommendation.
-  const selectForMe = () => {
-    const recoKey = RECO_KEY[stepKey];
-    const chosen = recoKey ? recommendedFor(profile.productContext, recoKey, aiOptions, common) : aiOptions;
-    const customStillSelected = custom.filter((c) => selected.includes(c) && !chosen.includes(c));
-    setSelected([...chosen, ...customStillSelected]);
-  };
-
-  // Pick a random handful from the available pool (works even with no AI context).
-  const randomize = () => {
-    const pool = Array.from(new Set([...aiOptions, ...common]));
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const count = Math.min(pool.length, 3 + Math.floor(Math.random() * 3)); // 3–5
-    const customStillSelected = custom.filter((c) => selected.includes(c));
-    setSelected([...shuffled.slice(0, count), ...customStillSelected]);
   };
 
   return (
@@ -177,10 +129,6 @@ export default function OptionStep({
                   onToggle={toggle}
                   onAddCustom={addCustom}
                   onRemoveCustom={removeCustom}
-                  onSelectForMe={aiOptions.length > 0 ? selectForMe : undefined}
-                  onRandomize={common.length > 0 ? randomize : undefined}
-                  onRegenerate={RECO_KEY[stepKey] ? regenerate : undefined}
-                  regenerating={regenerating}
                   customPlaceholder={customPlaceholder}
                   aiEmptyHint={aiEmptyHint}
                 />
@@ -198,10 +146,6 @@ export default function OptionStep({
           onToggle={toggle}
           onAddCustom={addCustom}
           onRemoveCustom={removeCustom}
-          onSelectForMe={aiOptions.length > 0 ? selectForMe : undefined}
-          onRandomize={common.length > 0 ? randomize : undefined}
-          onRegenerate={RECO_KEY[stepKey] ? regenerate : undefined}
-          regenerating={regenerating}
           customPlaceholder={customPlaceholder}
           aiEmptyHint={aiEmptyHint}
         />

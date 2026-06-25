@@ -90,6 +90,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   emotionalBehaviors: "how the user's emotional state and trust evolve through friction",
   abandonmentRules: "when the user stops, escalates, asks for help, or finishes with low confidence",
   suitableTasks: "task TYPES this profile is suitable for (not specific tasks)",
+  unsuitableTasks: "task TYPES this profile is NOT suitable for (not specific tasks)",
 };
 
 function buildPrompt(p: any, target: string): string {
@@ -102,6 +103,32 @@ ${context}
 Write the user's PRIMARY MOTIVATION — what they are ultimately trying to achieve — in one or two
 sentences, consistent with the role(s) and selections above.
 Return JSON: { "motivation": "..." }`;
+  }
+  if (target === "expertise") {
+    return `You define a reusable synthetic user (a constrained decision agent). ${RULES}
+
+${context}
+
+Choose the expertise levels that best fit THIS user and product. Pick exactly one value per field from the allowed options:
+- domainExpertise: Low | Medium | High | Expert
+- technicalProficiency: Low | Medium | High | Power user
+- productTypeFamiliarity: First time user | Occasional user | Regular user | Daily user | Power user
+- exactProductFamiliarity: Unknown | None | Low | Medium | High
+Be coherent with the role(s): e.g. a casual elderly user → low technical proficiency; a domain professional → high domain expertise; someone new to this exact product → None/Low.
+Return JSON: { "expertise": { "domainExpertise": "...", "technicalProficiency": "...", "productTypeFamiliarity": "...", "exactProductFamiliarity": "..." } }`;
+  }
+  if (target === "behaviorAxes") {
+    return `You define a reusable synthetic user (a constrained decision agent). ${RULES}
+
+${context}
+
+Choose where this user sits on each behavior axis, as an integer 0-4 (0 = the LEFT pole, 4 = the RIGHT pole, 2 = balanced). Be coherent with the role and expertise above (e.g. a low-tech casual user reads carefully, double-checks, and escalates sooner):
+- pace: 0 Skims ↔ 4 Reads thoroughly
+- priority: 0 Speed ↔ 4 Accuracy
+- verification: 0 Rarely checks ↔ 4 Double-checks
+- trust: 0 Trusting ↔ 4 Skeptical
+- escalation: 0 Self-reliant ↔ 4 Escalates
+Return JSON: { "behaviorAxes": { "pace": 0, "priority": 0, "verification": 0, "trust": 0, "escalation": 0 } }`;
   }
   const label = CATEGORY_LABEL[target] || target;
   return `You define a reusable synthetic user (a constrained decision agent). ${RULES}
