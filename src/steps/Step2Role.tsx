@@ -71,22 +71,35 @@ export default function Step2Role() {
 
   const selectedDescriptions = r.selected.map((n) => r.descriptions[n] || "").join(" ");
 
-  // Choose with AI: pick the top AI-suggested role for this product (deterministic fallback).
-  const chooseWithAi = () => {
-    const top = aiRoles[0];
-    if (top) {
-      if (!isOn(top.name)) toggleRole(top.name, top.description);
-    } else {
-      const name = GENERIC_ROLES[0];
-      if (!isOn(name)) toggleRole(name, `A general ${name.toLowerCase()} — shaped for this profile.`);
+  // Choose with AI: fill the whole step — pick the top AI role (deterministic fallback)
+  // and write the primary motivation if it's still empty.
+  const [choosing, setChoosing] = useState(false);
+  const chooseWithAi = async () => {
+    setChoosing(true);
+    let roleName = r.selected[0] || "";
+    if (r.selected.length === 0) {
+      const top = aiRoles[0];
+      if (top) {
+        roleName = top.name;
+        toggleRole(top.name, top.description);
+      } else {
+        roleName = GENERIC_ROLES[0];
+        toggleRole(roleName, `A general ${roleName.toLowerCase()} — shaped for this profile.`);
+      }
     }
+    if (!profile.primaryMotivation.trim()) {
+      const res = await refineField(profile, "motivation");
+      const value = res?.motivation || generatePrimaryMotivation(roleName, profile.productContext);
+      dispatch({ type: "patchTop", patch: { primaryMotivation: value } });
+    }
+    setChoosing(false);
   };
 
   return (
     <>
       <div className="-mt-2 flex items-center justify-between gap-3">
         <p className="text-[12px] text-[var(--color-ink-faint)]">You can pick more than one role.</p>
-        <AiFillButton variant="ai" label="Choose with AI" onClick={chooseWithAi} />
+        <AiFillButton variant="ai" label={choosing ? "Choosing…" : "Choose with AI"} onClick={chooseWithAi} disabled={choosing} />
       </div>
 
       <section>
