@@ -25,11 +25,13 @@ async function postJson(url: string, body: unknown, ms = 30000): Promise<any | n
 import {
   GENERIC_DECISION_BEHAVIORS,
   GENERIC_INFORMATION_NEEDS,
+  GENERIC_CONSTRAINTS,
   GENERIC_FORBIDDEN_ASSUMPTIONS,
   GENERIC_FRICTION_TRIGGERS,
   GENERIC_EMOTIONAL_BEHAVIORS,
   GENERIC_ABANDONMENT_RULES,
   GENERIC_SUITABLE_TASKS,
+  GENERIC_UNSUITABLE_TASKS,
 } from "./genericOptions";
 
 const COMMON_POOLS = {
@@ -40,6 +42,18 @@ const COMMON_POOLS = {
   emotionalBehaviors: GENERIC_EMOTIONAL_BEHAVIORS,
   abandonmentRules: GENERIC_ABANDONMENT_RULES,
   suitableTasks: GENERIC_SUITABLE_TASKS,
+};
+
+// Pools the auto-build endpoint picks from (a superset of COMMON_POOLS).
+const BUILD_POOLS = {
+  informationNeeds: GENERIC_INFORMATION_NEEDS,
+  constraints: GENERIC_CONSTRAINTS,
+  forbiddenAssumptions: GENERIC_FORBIDDEN_ASSUMPTIONS,
+  frictionTriggers: GENERIC_FRICTION_TRIGGERS,
+  emotionalBehaviors: GENERIC_EMOTIONAL_BEHAVIORS,
+  abandonmentRules: GENERIC_ABANDONMENT_RULES,
+  suitableTasks: GENERIC_SUITABLE_TASKS,
+  unsuitableTasks: GENERIC_UNSUITABLE_TASKS,
 };
 
 export interface AiResearchResponse {
@@ -101,5 +115,34 @@ export async function refineField(
 export async function completeProfile(profile: SyntheticProfile): Promise<GeneratedProfile | null> {
   const data = (await postJson("/api/complete", profile)) as GeneratedProfile | null;
   if (!data || !data.decisionStyle) return null;
+  return data;
+}
+
+/** Every selection the auto-build endpoint chooses, in one coherent pass. */
+export interface BuildResponse {
+  expertise: {
+    domainExpertise: string;
+    technicalProficiency: string;
+    productTypeFamiliarity: string;
+    exactProductFamiliarity: string;
+  };
+  behaviorAxes: Record<string, number>;
+  informationNeeds: string[];
+  constraints: string[];
+  forbiddenAssumptions: string[];
+  frictionTriggers: string[];
+  emotionalBehaviors: string[];
+  abandonmentRules: string[];
+  suitableTasks: string[];
+  unsuitableTasks: string[];
+  primaryMotivation: string;
+}
+
+/** "Auto-build the whole profile": one coherent pass. Null if AI is unavailable. */
+export async function buildProfile(profile: SyntheticProfile): Promise<BuildResponse | null> {
+  const data = (await postJson("/api/build", { profile, commonPools: BUILD_POOLS }, 45000)) as
+    | BuildResponse
+    | null;
+  if (!data || !data.expertise || !Array.isArray(data.informationNeeds)) return null;
   return data;
 }

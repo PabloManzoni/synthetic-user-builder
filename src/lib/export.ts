@@ -1,4 +1,4 @@
-import type { SyntheticProfile } from "../state/types";
+import type { SyntheticProfile, GeneratedProfile } from "../state/types";
 import { validateProfile } from "./validation";
 import { asciiFace } from "./asciiFace";
 
@@ -64,6 +64,25 @@ function derive(p: SyntheticProfile) {
       const picked = [...p.taskSuitability.unsuitable, ...p.taskSuitability.customUnsuitable];
       return picked.length ? picked : g?.unsuitableTaskTypes ?? [];
     })(),
+  };
+}
+
+/**
+ * Deterministic narrative built purely from the selections (no AI). Used as the
+ * fallback for auto-build when the model is unavailable, so the .md is always ready.
+ */
+export function deterministicNarrative(p: SyntheticProfile): GeneratedProfile {
+  const d = derive({ ...p, generated: null });
+  return {
+    primaryMotivation: d.primaryMotivation,
+    decisionStyle: d.decisionStyle,
+    attentionPattern: d.attentionPattern,
+    trustPattern: d.trustPattern,
+    behaviorUnderPressure: d.behaviorUnderPressure,
+    toleranceForAmbiguity: d.toleranceForAmbiguity,
+    commonWrongAssumptions: d.commonWrongAssumptions,
+    calibrationNotes: d.calibrationNotes,
+    unsuitableTaskTypes: d.unsuitableTaskTypes,
   };
 }
 
