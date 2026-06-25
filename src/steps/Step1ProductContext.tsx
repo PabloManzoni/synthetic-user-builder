@@ -119,6 +119,56 @@ export default function Step1ProductContext() {
         </p>
       </div>
 
+      {/* Revealed after analysis — shown ABOVE the button so the change is visible without scrolling. */}
+      <AnimatePresence>
+        {c.researched && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="space-y-3"
+          >
+            {c.researchFailed ? (
+              <WarningBanner tone="warn">
+                Couldn't find enough to go on. Add more detail or links above, or just use the common options.
+              </WarningBanner>
+            ) : (
+              <div className="rounded-xl border px-4 py-3" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-info)]">
+                    What the AI understood (editable)
+                  </h4>
+                  <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
+                    {c.aiSource === "ai" ? "Gemini" : "offline mock"}
+                    {c.aiConfidence ? ` · ${c.aiConfidence} confidence` : ""}
+                  </span>
+                </div>
+                <textarea
+                  className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-[var(--color-ink)] outline-none"
+                  rows={6}
+                  value={c.aiSummary}
+                  onChange={(e) => patch({ aiSummary: e.target.value })}
+                />
+                <p className="mt-2 text-[11px] text-[var(--color-ink-faint)]">
+                  The AI can be wrong — edit or delete anything that looks off.
+                </p>
+              </div>
+            )}
+
+            {/* Surfaced after analysis: AI pre-fills these, you tweak them. */}
+            <Labeled label="Primary users" optional>
+              <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownPrimaryUsers}
+                        onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most? e.g. warehouse staff, drivers, store managers" />
+            </Labeled>
+            <Labeled label="Risk areas" optional>
+              <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownRiskAreas}
+                        onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if it's misread? e.g. a missed alert, a wrong status" />
+            </Labeled>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {c.researchMode !== "skip" && (
         <div className="space-y-2">
           <button
@@ -171,55 +221,6 @@ export default function Step1ProductContext() {
           </AnimatePresence>
         </div>
       )}
-
-      <AnimatePresence>
-        {c.researched && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="space-y-3"
-          >
-            {c.researchFailed ? (
-              <WarningBanner tone="warn">
-                Couldn't find enough to go on. Add more detail or links above, or just use the common options.
-              </WarningBanner>
-            ) : (
-              <div className="rounded-xl border px-4 py-3" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-info)]">
-                    What the AI understood (editable)
-                  </h4>
-                  <span className="text-[10px] uppercase tracking-wide text-[var(--color-ink-faint)]">
-                    {c.aiSource === "ai" ? "Gemini" : "offline mock"}
-                    {c.aiConfidence ? ` · ${c.aiConfidence} confidence` : ""}
-                  </span>
-                </div>
-                <textarea
-                  className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-[var(--color-ink)] outline-none"
-                  rows={6}
-                  value={c.aiSummary}
-                  onChange={(e) => patch({ aiSummary: e.target.value })}
-                />
-                <p className="mt-2 text-[11px] text-[var(--color-ink-faint)]">
-                  The AI can be wrong — edit or delete anything that looks off.
-                </p>
-              </div>
-            )}
-
-            {/* Surfaced after analysis: AI pre-fills these, you tweak them. */}
-            <Labeled label="Primary users" optional>
-              <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownPrimaryUsers}
-                        onChange={(e) => patch({ knownPrimaryUsers: e.target.value })} placeholder="Who uses it most? e.g. warehouse staff, drivers, store managers" />
-            </Labeled>
-            <Labeled label="Risk areas" optional>
-              <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={2} value={c.knownRiskAreas}
-                        onChange={(e) => patch({ knownRiskAreas: e.target.value })} placeholder="What goes wrong if it's misread? e.g. a missed alert, a wrong status" />
-            </Labeled>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="pt-1 text-center">
         {c.researchMode === "skip" ? (
