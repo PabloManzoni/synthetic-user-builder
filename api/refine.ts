@@ -63,7 +63,7 @@ async function geminiJSON(
 }
 
 const RULES = `Rules: describe BEHAVIOR and LIMITS, never task/navigation steps (no "click", "open", "go to", "find X").
-Stay consistent with everything already chosen. Keep items short. Output STRICT JSON only.`;
+Stay consistent with everything already chosen. Keep items short. ALWAYS write in English, even if the input is in another language. Output STRICT JSON only.`;
 
 function contextOf(p: any): string {
   const ctx = p.productContext || {};

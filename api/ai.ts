@@ -79,6 +79,7 @@ Hard rules:
 - Describe BEHAVIOR and CONSTRAINTS, not how to use a specific product flow.
 - Keep each item short (a few words to one sentence). No numbering.
 - Forbidden assumptions must start with "Cannot ...".
+- ALWAYS write every value in English, even if the product description or any input is in another language.
 - Output STRICT JSON only, matching the requested shape. No prose, no markdown.`;
 
 function buildPrompt(ctx: any, pageContent: string): string {

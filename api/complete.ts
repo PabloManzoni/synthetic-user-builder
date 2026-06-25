@@ -68,6 +68,7 @@ Hard rules:
 - Describe BEHAVIOR, DECISION-MAKING and LIMITS — not how to use a specific product flow.
 - Stay consistent with the provided role, expertise and selected behaviors. Do not contradict them.
 - Be specific and grounded in the product domain, but keep the profile task-independent and reusable.
+- ALWAYS write every value in English, even if the user's selections or product description are in another language.
 - Output STRICT JSON only (no markdown, no prose outside JSON).`;
 
 function buildPrompt(p: any): string {
