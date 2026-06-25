@@ -49,9 +49,11 @@ function BehaviorStep() {
   const [choosing, setChoosing] = useState(false);
   const chooseAll = async () => {
     setChoosing(true);
-    const axes = await chooseBehaviorAxes(profile);
+    const [axes, emo] = await Promise.all([
+      chooseBehaviorAxes(profile),
+      chooseOptions(profile, "emotionalBehaviors", GENERIC_EMOTIONAL_BEHAVIORS),
+    ]);
     Object.entries(axes).forEach(([key, value]) => dispatch({ type: "setBehaviorAxis", key, value }));
-    const emo = await chooseOptions(profile, "emotionalBehaviors", GENERIC_EMOTIONAL_BEHAVIORS);
     dispatch({ type: "setSelected", key: "emotionalBehavior", values: emo });
     setChoosing(false);
   };
