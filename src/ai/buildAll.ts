@@ -23,6 +23,51 @@ import {
 } from "./genericOptions";
 
 const AXES = ["pace", "priority", "verification", "trust", "escalation"];
+
+function hashHex(s: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16);
+}
+
+/**
+ * Signature of the user's GENERATION INPUTS — context, role, expertise, axes,
+ * every option selection and task choice, plus motivation. Excludes derived/AI
+ * text (slice.generated, the narrative) so merely visiting a step never changes
+ * it; only real edits do. Used to decide when the auto-build button reappears.
+ */
+export function profileSignature(p: SyntheticProfile): string {
+  const c = p.productContext;
+  const e = p.expertise;
+  const opt = (s: { selected: string[]; custom: string[] }) => [s.selected, s.custom];
+  return hashHex(
+    JSON.stringify({
+      c: [c.clientName, c.productName, c.manualDescription, c.aiSummary, c.knownPrimaryUsers, c.knownRiskAreas],
+      r: [p.role.selected, p.role.custom],
+      m: p.primaryMotivation,
+      e: [e.domainExpertise, e.technicalProficiency, e.productTypeFamiliarity, e.exactProductFamiliarity],
+      x: p.behaviorAxes,
+      o: [
+        opt(p.decisionBehavior),
+        opt(p.informationNeeds),
+        opt(p.constraints),
+        opt(p.forbiddenAssumptions),
+        opt(p.frictionTriggers),
+        opt(p.emotionalBehavior),
+        opt(p.abandonmentRules),
+      ],
+      t: [
+        p.taskSuitability.suitable,
+        p.taskSuitability.unsuitable,
+        p.taskSuitability.customSuitable,
+        p.taskSuitability.customUnsuitable,
+      ],
+    })
+  );
+}
 const clampAxis = (v: unknown) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.max(0, Math.min(4, Math.round(n))) : 2;
@@ -134,5 +179,7 @@ export async function generateFullProfile(p: SyntheticProfile): Promise<Syntheti
   const plan = await planFullProfile(p);
   const merged = applyPlan(p, plan);
   const generated = (await completeProfile(merged)) ?? deterministicNarrative(merged);
-  return { ...merged, generated };
+  const full = { ...merged, generated };
+  // Stamp the inputs so the button hides until the form changes again.
+  return { ...full, builtSignature: profileSignature(full) };
 }

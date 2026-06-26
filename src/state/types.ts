@@ -130,6 +130,12 @@ export interface SyntheticProfile {
   behaviorAxes: Record<string, number>;
   /** Set by "Complete with AI"; export prefers these when present. */
   generated: GeneratedProfile | null;
+  /**
+   * Signature of the inputs at the last full auto-build. The "Build the entire
+   * user" button hides while this matches the current inputs (nothing new to
+   * regenerate) and reappears as soon as the form changes.
+   */
+  builtSignature?: string;
   productContext: ProductContext;
   role: RoleSlice;
   expertise: ExpertiseSlice;

@@ -9,7 +9,7 @@ import Toast from "./components/Toast";
 import ImportModal from "./components/ImportModal";
 import NewProfileModal from "./components/NewProfileModal";
 import { profileCompleteness, validateProfile } from "./lib/validation";
-import { generateFullProfile } from "./ai/buildAll";
+import { generateFullProfile, profileSignature } from "./ai/buildAll";
 import { toProfileFile, parseProfileFile, download } from "./lib/export";
 import type { StepStatus } from "./components/Stepper";
 import { STEPS } from "./steps";
@@ -145,10 +145,13 @@ export default function App() {
   // single prominent CTA and the footer nav steps out of the way.
   const finished = step === LAST && !!profile.generated;
 
-  // Auto-build shortcut: on the Role step, once context + a role exist, the footer shows
-  // a "Build the entire user with AI" button that fills every step and jumps to Export.
+  // Auto-build shortcut in the footer. Available on steps 2–8 (Role → Validation)
+  // once context + a role exist. It hides after a build and reappears only when the
+  // form changes again (signature differs from the one stamped at the last build).
   const hasContext = c.researched || c.researchMode === "skip" || !!(c.clientName || c.manualDescription);
-  const canAutoBuild = step === 1 && hasContext && profile.role.selected.length > 0;
+  const dirtySinceBuild = profileSignature(profile) !== profile.builtSignature;
+  const canAutoBuild =
+    step >= 1 && step <= 7 && hasContext && profile.role.selected.length > 0 && dirtySinceBuild;
   const autoBuild = async () => {
     setBuilding(true);
     const full = await generateFullProfile(profile);
