@@ -328,16 +328,6 @@ export default function App() {
         )}
 
         <div className="flex items-center gap-2">
-          {step !== LAST && (
-            <button
-              type="button"
-              onClick={() => go(LAST)}
-              className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
-              style={{ borderColor: "var(--color-border-strong)", color: "var(--color-ink-soft)" }}
-            >
-              Export
-            </button>
-          )}
           {step !== LAST ? (
             <button
               type="button"

@@ -24,6 +24,9 @@ export default function Stepper({
       {STEP_TITLES.map((title, i) => {
         const active = i === current;
         const st = status[i];
+        // Export is the final action step — give it a touch more prominence so it
+        // stays easy to reach now that there's no persistent Export button below.
+        const isExport = i === STEP_TITLES.length - 1;
         // Circle color reflects status; the active step always uses the accent.
         const ring =
           active
@@ -32,14 +35,18 @@ export default function Stepper({
               ? "var(--color-ok)"
               : st === "attention"
                 ? "var(--color-risk)"
-                : "var(--color-border-strong)";
+                : isExport
+                  ? "var(--color-accent)"
+                  : "var(--color-border-strong)";
         const fg = active
           ? "#0b0d10"
           : st === "ready"
             ? "var(--color-ok)"
             : st === "attention"
               ? "var(--color-risk)"
-              : "var(--color-ink-faint)";
+              : isExport
+                ? "var(--color-accent)"
+                : "var(--color-ink-faint)";
         const content = active ? i + 1 : st === "ready" ? "✓" : st === "attention" ? "!" : i + 1;
         return (
           <button
@@ -61,8 +68,8 @@ export default function Stepper({
             </span>
             {!collapsed && (
               <span
-                className="text-[13px] leading-tight transition-colors"
-                style={{ color: active ? "var(--color-ink)" : "var(--color-ink-soft)" }}
+                className={"text-[13px] leading-tight transition-colors " + (isExport ? "font-semibold" : "")}
+                style={{ color: active || isExport ? "var(--color-ink)" : "var(--color-ink-soft)" }}
               >
                 {title}
               </span>
