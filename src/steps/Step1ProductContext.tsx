@@ -99,24 +99,23 @@ export default function Step1ProductContext() {
         />
       </Labeled>
 
-      <Labeled label="Client">
-        <input className={inputCls} style={{ borderColor: "var(--color-border)" }} value={c.clientName}
-               onChange={(e) => patch({ clientName: e.target.value })} placeholder="The company behind the product — e.g. Netflix, Spotify, Airbnb" />
-      </Labeled>
-
       <div>
-        <Labeled label="Product description">
+        <Labeled label="Product & user context">
           <textarea className={inputCls} style={{ borderColor: "var(--color-border)" }} rows={7} value={c.manualDescription}
                     onChange={(e) => patch({ manualDescription: e.target.value })}
-                    placeholder={"Describe the product, or paste its website, links and any details…\n\ne.g. https://www.spotify.com — music streaming: playlists, recommendations, podcasts, offline listening"} />
+                    placeholder={"e.g. https://netflix.com — or a brand + what it does"} />
         </Labeled>
-        <p className="mt-1.5 flex gap-1.5 text-[12px] leading-snug text-[var(--color-ink-faint)]">
+        <div className="mt-1.5 flex gap-1.5 text-[12px] leading-snug text-[var(--color-ink-faint)]">
           <span aria-hidden>💡</span>
-          <span>
-            This is the app your synthetic user works in. Paste its website, links or a good description — the
-            more you give, the better we predict its <em>real</em> roles instead of guessing.
-          </span>
-        </p>
+          <div>
+            <p>The more you give, the better we predict <em>real</em> roles instead of guessing. You can paste any of:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4">
+              <li>A website or links — e.g. netflix.com, spotify.com</li>
+              <li>What the product does</li>
+              <li>Who uses it (the users / roles)</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Revealed after analysis — shown ABOVE the button so the change is visible without scrolling. */}
@@ -171,12 +170,22 @@ export default function Step1ProductContext() {
 
       {c.researchMode !== "skip" && (
         <div className="space-y-2">
+          {/* First run: primary accent CTA. After research: drop to a quieter secondary button
+              so the eye goes to Continue instead of re-tapping rebuild. */}
           <button
             type="button"
             onClick={runResearch}
             disabled={loading}
-            className="relative w-full overflow-hidden rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-wait"
-            style={{ background: "var(--color-accent)", color: "#0b0d10" }}
+            className={
+              c.researched && !loading
+                ? "relative mx-auto flex items-center justify-center gap-2 overflow-hidden rounded-lg border px-4 py-2 text-[13px] font-medium text-[var(--color-ink-soft)] transition-colors hover:text-[var(--color-ink)] disabled:cursor-wait"
+                : "relative w-full overflow-hidden rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-wait"
+            }
+            style={
+              c.researched && !loading
+                ? { borderColor: "var(--color-border)", background: "var(--color-surface-2)" }
+                : { background: "var(--color-accent)", color: "#0b0d10" }
+            }
           >
             {loading && (
               <motion.span
@@ -197,7 +206,7 @@ export default function Step1ProductContext() {
                   transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
                 />
               )}
-              {loading ? "Building…" : c.researched ? "Rebuild suggestions" : "Build my suggestions with AI"}
+              {loading ? "Building…" : c.researched ? "↻ Rebuild suggestions" : "Build my suggestions with AI"}
             </span>
           </button>
 
@@ -215,7 +224,9 @@ export default function Step1ProductContext() {
               </motion.p>
             ) : (
               <p className="text-center text-[11px] text-[var(--color-ink-faint)]">
-                This shapes the suggestions in every step.
+                {c.researched
+                  ? "Optional — only if you edited the context above."
+                  : "This shapes the suggestions in every step."}
               </p>
             )}
           </AnimatePresence>

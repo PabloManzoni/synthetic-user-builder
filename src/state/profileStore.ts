@@ -105,7 +105,7 @@ type OptionKey =
   | "abandonmentRules";
 
 type Action =
-  | { type: "patchTop"; patch: Partial<Pick<SyntheticProfile, "profileName" | "primaryMotivation">> }
+  | { type: "patchTop"; patch: Partial<Pick<SyntheticProfile, "profileName" | "primaryMotivation" | "builtSignature">> }
   | { type: "setGeneratedProfile"; value: SyntheticProfile["generated"] }
   | { type: "setBehaviorAxis"; key: string; value: number }
   | { type: "patchProductContext"; patch: Partial<ProductContext> }

@@ -152,6 +152,8 @@ export default function App() {
   const dirtySinceBuild = profileSignature(profile) !== profile.builtSignature;
   const canAutoBuild =
     step >= 1 && step <= 7 && hasContext && profile.role.selected.length > 0 && dirtySinceBuild;
+  // First run gets the loud CTA; after a build, changes get a quieter "label + small button".
+  const everBuilt = !!profile.builtSignature;
   const autoBuild = async () => {
     setBuilding(true);
     const full = await generateFullProfile(profile);
@@ -294,7 +296,46 @@ export default function App() {
           Back
         </button>
 
-        {canAutoBuild && (
+        {canAutoBuild && (everBuilt ? (
+          // Changes pending after a build: a short prompt + a smaller, quieter button.
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="hidden truncate text-[12px] text-[var(--color-ink-soft)] sm:block">
+              Changes not yet in the synthetic user.
+            </span>
+            <button
+              type="button"
+              onClick={autoBuild}
+              disabled={building}
+              title="Re-applies this role & context across every step. You can tweak anything after."
+              className="relative shrink-0 overflow-hidden rounded-lg border px-3.5 py-1.5 text-[13px] font-medium transition-colors disabled:cursor-wait"
+              style={{ borderColor: "var(--color-accent)", color: "var(--color-accent)" }}
+            >
+              {building && (
+                <motion.span
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{ background: "linear-gradient(90deg, transparent, rgba(124,138,245,0.25), transparent)" }}
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "100%" }}
+                  transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+                />
+              )}
+              <span className="relative flex items-center gap-2">
+                {building ? (
+                  <motion.span
+                    aria-hidden
+                    className="inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
+                  />
+                ) : (
+                  <span aria-hidden>↻</span>
+                )}
+                {building ? "Updating…" : "Update synthetic user"}
+              </span>
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
             onClick={autoBuild}
@@ -328,7 +369,7 @@ export default function App() {
               {!building && <span aria-hidden>→</span>}
             </span>
           </button>
-        )}
+        ))}
 
         <div className="flex items-center gap-2">
           {step !== LAST ? (
