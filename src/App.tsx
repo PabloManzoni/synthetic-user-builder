@@ -9,6 +9,7 @@ import Toast from "./components/Toast";
 import ImportModal from "./components/ImportModal";
 import NewProfileModal from "./components/NewProfileModal";
 import { profileCompleteness, validateProfile } from "./lib/validation";
+import { generateFullProfile } from "./ai/buildAll";
 import { toProfileFile, parseProfileFile, download } from "./lib/export";
 import type { StepStatus } from "./components/Stepper";
 import { STEPS } from "./steps";
@@ -36,6 +37,7 @@ export default function App() {
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const [importing, setImporting] = useState(false);
   const [confirmingNew, setConfirmingNew] = useState(false);
+  const [building, setBuilding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
   const mainRef = useRef<HTMLElement>(null);
@@ -142,6 +144,18 @@ export default function App() {
   // On the Export step, once a synthetic user is generated, "New profile" becomes the
   // single prominent CTA and the footer nav steps out of the way.
   const finished = step === LAST && !!profile.generated;
+
+  // Auto-build shortcut: on the Role step, once context + a role exist, the footer shows
+  // a "Build the entire user with AI" button that fills every step and jumps to Export.
+  const hasContext = c.researched || c.researchMode === "skip" || !!(c.clientName || c.manualDescription);
+  const canAutoBuild = step === 1 && hasContext && profile.role.selected.length > 0;
+  const autoBuild = async () => {
+    setBuilding(true);
+    const full = await generateFullProfile(profile);
+    dispatch({ type: "loadProfile", profile: full });
+    setBuilding(false);
+    go(LAST); // Export
+  };
 
   return (
     <WizardNavContext.Provider value={go}>
@@ -276,6 +290,42 @@ export default function App() {
         >
           Back
         </button>
+
+        {canAutoBuild && (
+          <button
+            type="button"
+            onClick={autoBuild}
+            disabled={building}
+            title="Fills every step from this role & context. You can tweak anything after."
+            className="relative overflow-hidden rounded-lg px-5 py-2 text-sm font-semibold transition-colors disabled:cursor-wait"
+            style={{ background: "var(--color-accent)", color: "#0b0d10" }}
+          >
+            {building && (
+              <motion.span
+                aria-hidden
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)" }}
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+              />
+            )}
+            <span className="relative flex items-center gap-2">
+              {building ? (
+                <motion.span
+                  aria-hidden
+                  className="inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
+                />
+              ) : (
+                <span aria-hidden>✨</span>
+              )}
+              {building ? "Building the whole user…" : "Build the entire user with AI"}
+              {!building && <span aria-hidden>→</span>}
+            </span>
+          </button>
+        )}
 
         <div className="flex items-center gap-2">
           {step !== LAST && (

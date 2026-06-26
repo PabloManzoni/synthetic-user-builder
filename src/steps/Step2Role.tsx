@@ -1,16 +1,13 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { useProfile } from "../state/profileStore";
-import { useWizardNav } from "../state/nav";
 import { suggestRoles, generatePrimaryMotivation } from "../ai/mockAi";
 import { refineField } from "../ai/aiClient";
-import { generateFullProfile } from "../ai/buildAll";
 import { GENERIC_ROLES } from "../ai/genericOptions";
 import { detectDemographicOnly } from "../lib/validation";
 import WarningBanner from "../components/WarningBanner";
 import AiFillButton from "../components/AiFillButton";
 import AiEmptyHint from "../components/AiEmptyHint";
-import { STEP_TITLES, type SuggestedRole } from "../state/types";
+import type { SuggestedRole } from "../state/types";
 
 export default function Step2Role() {
   const { profile, dispatch } = useProfile();
@@ -96,21 +93,6 @@ export default function Step2Role() {
       dispatch({ type: "patchTop", patch: { primaryMotivation: value } });
     }
     setChoosing(false);
-  };
-
-  // Auto-build the WHOLE profile from context + role in one coherent pass, then jump
-  // to Export with the .md ready. Respects anything already set; never overwrites edits.
-  const go = useWizardNav();
-  const c = profile.productContext;
-  const hasContext = c.researched || c.researchMode === "skip" || !!(c.clientName || c.manualDescription);
-  const canAutoBuild = hasContext && r.selected.length > 0;
-  const [building, setBuilding] = useState(false);
-  const autoBuild = async () => {
-    setBuilding(true);
-    const full = await generateFullProfile(profile);
-    dispatch({ type: "loadProfile", profile: full });
-    setBuilding(false);
-    go(STEP_TITLES.length - 1); // Export
   };
 
   return (
@@ -259,53 +241,6 @@ export default function Step2Role() {
               style={{ borderColor: "var(--color-border)" }}
             />
           </label>
-        </div>
-      )}
-
-      {/* Shortcut: build the entire profile from here. Appears once context + a role exist. */}
-      {canAutoBuild && (
-        <div className="border-t pt-6" style={{ borderColor: "var(--color-border)" }}>
-          <button
-            type="button"
-            onClick={autoBuild}
-            disabled={building}
-            className="relative w-full overflow-hidden rounded-xl px-5 py-4 text-left transition-colors disabled:cursor-wait"
-            style={{ background: "var(--color-accent)", color: "#0b0d10" }}
-          >
-            {building && (
-              <motion.span
-                aria-hidden
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)" }}
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
-                transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
-              />
-            )}
-            <span className="relative flex items-center gap-3">
-              {building ? (
-                <motion.span
-                  aria-hidden
-                  className="inline-block h-5 w-5 shrink-0 rounded-full border-2 border-current border-t-transparent"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
-                />
-              ) : (
-                <span className="text-xl leading-none" aria-hidden>✨</span>
-              )}
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-bold leading-tight">
-                  {building ? "Building the whole user…" : "Build the entire user with AI"}
-                </span>
-                <span className="block text-[12px] font-medium leading-snug opacity-80">
-                  {building
-                    ? "Designing every step coherently from this role & context."
-                    : "Fills every step from this role & context. You can tweak anything after."}
-                </span>
-              </span>
-              {!building && <span className="text-lg leading-none" aria-hidden>→</span>}
-            </span>
-          </button>
         </div>
       )}
     </>
