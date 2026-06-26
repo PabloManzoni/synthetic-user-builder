@@ -123,12 +123,17 @@ EXPERTISE — pick exactly one value per field:
 - productTypeFamiliarity: First time user | Occasional user | Regular user | Daily user | Power user
 - exactProductFamiliarity: Unknown | None | Low | Medium | High
 
-BEHAVIOR AXES — integer 0-4 (0 = LEFT pole, 4 = RIGHT pole, 2 = balanced):
+BEHAVIOR AXES — for each, an integer 0-4 (0 = far LEFT pole, 2 = balanced, 4 = far RIGHT pole):
 - pace: 0 Skims ↔ 4 Reads thoroughly
 - priority: 0 Speed ↔ 4 Accuracy
 - verification: 0 Rarely checks ↔ 4 Double-checks
 - trust: 0 Trusting ↔ 4 Skeptical
 - escalation: 0 Self-reliant ↔ 4 Escalates
+Use the FULL range and make the five values VARIED — a believable person is a MIX, never all-high
+or all-low. Most axes should land on 1, 2 or 3; reserve 0 and 4 for genuinely extreme traits, and do
+NOT set every axis to the same number. Emotions don't all point one way: e.g. an anxious novice may read
+thoroughly (pace 3) yet rush for speed (priority 1), distrust the screen (trust 4) but rarely double-check
+(verification 1), and escalate fast (escalation 4).
 
 Return JSON with EXACTLY this shape:
 {
