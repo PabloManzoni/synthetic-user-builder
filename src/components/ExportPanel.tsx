@@ -165,7 +165,20 @@ export default function ExportPanel() {
 
       {genError && (
         <WarningBanner tone="warn">
-          AI isn't available right now (no key or a temporary error). You can still grab the raw version below.
+          <div className="flex items-center justify-between gap-3">
+            <span>
+              Couldn't generate just now — usually a temporary blip. Try again, or grab the raw version below.
+            </span>
+            <button
+              type="button"
+              onClick={runGenerate}
+              disabled={generating}
+              className="shrink-0 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors disabled:opacity-60"
+              style={{ background: "var(--color-accent)", color: "#0b0d10" }}
+            >
+              {generating ? "Trying…" : "↻ Try again"}
+            </button>
+          </div>
         </WarningBanner>
       )}
 
@@ -184,6 +197,27 @@ export default function ExportPanel() {
       <p className="text-[12px] leading-snug text-[var(--color-ink-faint)]">
         This is the user profile only — no specific task and no screen steps. Add a task separately in your testing tool.
       </p>
+
+      {/* Where this profile comes from + where to run it. */}
+      <div className="flex items-center justify-center gap-3 text-[11px] text-[var(--color-ink-faint)]">
+        <a
+          href="https://github.com/PabloManzoni/synthetic-user-builder"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:text-[var(--color-ink-soft)]"
+        >
+          GitHub
+        </a>
+        <span style={{ color: "var(--color-border)" }}>·</span>
+        <a
+          href="https://github.com/PabloManzoni/user-simulation"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:text-[var(--color-ink-soft)]"
+        >
+          Run it in the Claude simulator →
+        </a>
+      </div>
     </div>
   );
 }

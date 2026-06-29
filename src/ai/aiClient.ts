@@ -22,6 +22,16 @@ async function postJson(url: string, body: unknown, ms = 30000): Promise<any | n
     clearTimeout(timer);
   }
 }
+
+// One silent retry: transient blips (cold start, rate spike, a single dropped
+// request) usually clear on a second try, so we retry once before giving up.
+// The server already retries Gemini-side; this covers the hop in between.
+async function withRetry<T>(fn: () => Promise<T | null>, delayMs = 600): Promise<T | null> {
+  const first = await fn();
+  if (first != null) return first;
+  await new Promise((r) => setTimeout(r, delayMs));
+  return fn();
+}
 import {
   GENERIC_DECISION_BEHAVIORS,
   GENERIC_INFORMATION_NEEDS,
@@ -68,9 +78,11 @@ export interface AiResearchResponse {
 }
 
 export async function callAi(ctx: ProductContext): Promise<AiResearchResponse | null> {
-  const data = (await postJson("/api/ai", { ...ctx, commonPools: COMMON_POOLS })) as AiResearchResponse | null;
-  if (!data || !data.suggestions || !Array.isArray(data.roles)) return null;
-  return data;
+  return withRetry(async () => {
+    const data = (await postJson("/api/ai", { ...ctx, commonPools: COMMON_POOLS })) as AiResearchResponse | null;
+    if (!data || !data.suggestions || !Array.isArray(data.roles)) return null;
+    return data;
+  });
 }
 
 export type RefineTarget =
@@ -113,9 +125,11 @@ export async function refineField(
 
 /** "Complete with AI": returns the rich narrative, or null if unavailable. */
 export async function completeProfile(profile: SyntheticProfile): Promise<GeneratedProfile | null> {
-  const data = (await postJson("/api/complete", profile)) as GeneratedProfile | null;
-  if (!data || !data.decisionStyle) return null;
-  return data;
+  return withRetry(async () => {
+    const data = (await postJson("/api/complete", profile)) as GeneratedProfile | null;
+    if (!data || !data.decisionStyle) return null;
+    return data;
+  });
 }
 
 /** Every selection the auto-build endpoint chooses, in one coherent pass. */
@@ -140,9 +154,11 @@ export interface BuildResponse {
 
 /** "Auto-build the whole profile": one coherent pass. Null if AI is unavailable. */
 export async function buildProfile(profile: SyntheticProfile): Promise<BuildResponse | null> {
-  const data = (await postJson("/api/build", { profile, commonPools: BUILD_POOLS }, 45000)) as
-    | BuildResponse
-    | null;
-  if (!data || !data.expertise || !Array.isArray(data.informationNeeds)) return null;
-  return data;
+  return withRetry(async () => {
+    const data = (await postJson("/api/build", { profile, commonPools: BUILD_POOLS }, 45000)) as
+      | BuildResponse
+      | null;
+    if (!data || !data.expertise || !Array.isArray(data.informationNeeds)) return null;
+    return data;
+  });
 }

@@ -23,7 +23,7 @@ export default function WarningBanner({ tone = "warn", children }: { tone?: Tone
         style={{ background: t.dot }}
         aria-hidden
       />
-      <span>{children}</span>
+      <span className="min-w-0 flex-1">{children}</span>
     </motion.div>
   );
 }

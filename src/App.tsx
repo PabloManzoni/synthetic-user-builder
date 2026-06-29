@@ -8,6 +8,7 @@ import LiveProfilePreview from "./components/LiveProfilePreview";
 import Toast from "./components/Toast";
 import ImportModal from "./components/ImportModal";
 import NewProfileModal from "./components/NewProfileModal";
+import AboutModal from "./components/AboutModal";
 import { profileCompleteness, validateProfile } from "./lib/validation";
 import { generateFullProfile, profileSignature } from "./ai/buildAll";
 import { toProfileFile, parseProfileFile, download } from "./lib/export";
@@ -37,6 +38,7 @@ export default function App() {
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const [importing, setImporting] = useState(false);
   const [confirmingNew, setConfirmingNew] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const [building, setBuilding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -194,6 +196,16 @@ export default function App() {
             </div>
           )}
           <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowAbout(true)}
+              title="About this tool"
+              aria-label="About this tool"
+              className="rounded-md border px-2 py-1.5 text-[12px] font-semibold text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink)]"
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              ?
+            </button>
             <button
               type="button"
               onClick={exportProfile}
@@ -409,6 +421,7 @@ export default function App() {
           }}
         />
       )}
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
       <Toast message={toast} />
     </div>
     </WizardNavContext.Provider>

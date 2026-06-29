@@ -17,6 +17,10 @@ async function geminiJSON(
   const primary = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const models = Array.from(new Set([primary, "gemini-2.0-flash"]));
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const backoff = (a: number) => sleep(300 * Math.pow(2, a) + Math.floor(Math.random() * 150));
+  // Transient statuses worth a retry. A 429 from a monthly spend cap is NOT
+  // transient (retrying just burns more quota), so we bail on it explicitly below.
+  const RETRYABLE = new Set([429, 500, 502, 503]);
   let lastStatus = 503;
   let lastDetail = "";
   for (const model of models) {
@@ -36,7 +40,7 @@ async function geminiJSON(
         );
       } catch {
         lastStatus = 599;
-        await sleep(400);
+        await backoff(a);
         continue;
       }
       if (res.ok) {
@@ -51,8 +55,12 @@ async function geminiJSON(
       }
       lastStatus = res.status;
       try { lastDetail = (await res.text()).slice(0, 600); } catch {}
-      if (res.status === 503) {
-        await sleep(500 * (a + 1));
+      // Monthly spend cap / hard quota: retrying or switching model won't help.
+      if (res.status === 429 && /spend cap|RESOURCE_EXHAUSTED/i.test(lastDetail)) {
+        return { ok: false, status: 429, detail: lastDetail };
+      }
+      if (RETRYABLE.has(res.status)) {
+        await backoff(a);
         continue;
       }
       break;
