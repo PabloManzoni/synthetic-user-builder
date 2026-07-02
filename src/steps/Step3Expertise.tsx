@@ -3,6 +3,7 @@ import { useProfile } from "../state/profileStore";
 import { generateExpertiseInterpretation } from "../ai/mockAi";
 import { chooseExpertise } from "../ai/choose";
 import AiFillButton from "../components/AiFillButton";
+import { aiLabel } from "../lib/aiMode";
 import {
   DOMAIN_EXPERTISE_LEVELS,
   TECHNICAL_LEVELS,
@@ -76,7 +77,7 @@ export default function Step3Expertise() {
       <div className="flex justify-end">
         <AiFillButton
           variant="ai"
-          label={choosing ? "Choosing…" : "Choose with AI"}
+          label={choosing ? "Choosing…" : aiLabel("Choose with AI", "Quick-pick (offline)")}
           onClick={chooseWithAi}
           disabled={choosing}
         />

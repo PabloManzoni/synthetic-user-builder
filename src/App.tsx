@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useProfile, DRAFT_KEY } from "./state/profileStore";
 import { WizardNavContext } from "./state/nav";
+import { aiLabel } from "./lib/aiMode";
+import OfflineAiBanner from "./components/OfflineAiBanner";
 import Stepper from "./components/Stepper";
 import StepShell from "./components/StepShell";
 import LiveProfilePreview from "./components/LiveProfilePreview";
@@ -167,6 +169,7 @@ export default function App() {
   return (
     <WizardNavContext.Provider value={go}>
     <div className="flex h-screen flex-col bg-[var(--color-bg)]">
+      <OfflineAiBanner />
       {/* Header */}
       <header className="flex items-center justify-between border-b px-6 py-3.5" style={{ borderColor: "var(--color-border)" }}>
         <button
@@ -375,9 +378,9 @@ export default function App() {
                   transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
                 />
               ) : (
-                <span aria-hidden>✨</span>
+                <span aria-hidden>{aiLabel("✨", "⚡")}</span>
               )}
-              {building ? "Building the whole user…" : "Build the entire user with AI"}
+              {building ? "Building the whole user…" : aiLabel("Build the entire user with AI", "Build the entire user (offline)")}
               {!building && <span aria-hidden>→</span>}
             </span>
           </button>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import AiFillButton from "./AiFillButton";
+import { aiLabel } from "../lib/aiMode";
 
 export interface SectionDef {
   key: string;
@@ -75,7 +76,7 @@ export default function MultiSection({
             <span className="mr-1">
               <AiFillButton
                 variant="ai"
-                label={choosing ? "Choosing…" : "Choose with AI"}
+                label={choosing ? "Choosing…" : aiLabel("Choose with AI", "Quick-pick (offline)")}
                 onClick={onChoose}
                 disabled={choosing}
               />

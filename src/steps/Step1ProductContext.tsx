@@ -5,6 +5,7 @@ import { research } from "../ai/mockAi";
 import { randomProfileName } from "../lib/random";
 import AiFillButton from "../components/AiFillButton";
 import WarningBanner from "../components/WarningBanner";
+import { aiLabel } from "../lib/aiMode";
 
 const Labeled = ({
   label,
@@ -206,7 +207,7 @@ export default function Step1ProductContext() {
                   transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
                 />
               )}
-              {loading ? "Building…" : c.researched ? "↻ Rebuild suggestions" : "Build my suggestions with AI"}
+              {loading ? "Building…" : c.researched ? "↻ Rebuild suggestions" : aiLabel("Build my suggestions with AI", "Build my suggestions (offline)")}
             </span>
           </button>
 

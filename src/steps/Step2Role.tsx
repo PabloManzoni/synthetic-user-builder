@@ -8,6 +8,7 @@ import WarningBanner from "../components/WarningBanner";
 import AiFillButton from "../components/AiFillButton";
 import AiEmptyHint from "../components/AiEmptyHint";
 import type { SuggestedRole } from "../state/types";
+import { aiLabel } from "../lib/aiMode";
 
 export default function Step2Role() {
   const { profile, dispatch } = useProfile();
@@ -99,7 +100,7 @@ export default function Step2Role() {
     <>
       <div className="-mt-2 flex items-center justify-between gap-3">
         <p className="text-[12px] text-[var(--color-ink-faint)]">You can pick more than one role.</p>
-        <AiFillButton variant="ai" label={choosing ? "Choosing…" : "Choose with AI"} onClick={chooseWithAi} disabled={choosing} />
+        <AiFillButton variant="ai" label={choosing ? "Choosing…" : aiLabel("Choose with AI", "Quick-pick (offline)")} onClick={chooseWithAi} disabled={choosing} />
       </div>
 
       <section>
@@ -228,7 +229,7 @@ export default function Step2Role() {
               <span className="text-[12px] font-medium text-[var(--color-ink-soft)]">Primary motivation</span>
               <AiFillButton
                 variant="ai"
-                label={fillingMotivation ? "Writing…" : "Fill with AI"}
+                label={fillingMotivation ? "Writing…" : aiLabel("Fill with AI", "Quick-fill (offline)")}
                 onClick={fillMotivation}
               />
             </span>

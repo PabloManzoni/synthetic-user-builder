@@ -6,6 +6,7 @@ import { type Verdict, STEP_TITLES } from "../state/types";
 import WarningBanner from "./WarningBanner";
 import { suggestRoles, generatePrimaryMotivation } from "../ai/mockAi";
 import { chooseOptions, chooseExpertise, chooseBehaviorAxes } from "../ai/choose";
+import { aiLabel } from "../lib/aiMode";
 import {
   GENERIC_ROLES,
   GENERIC_EMOTIONAL_BEHAVIORS,
@@ -167,7 +168,7 @@ export default function ValidationPanel() {
           style={{ borderColor: "var(--color-accent)", background: "var(--color-surface-2)" }}
         >
           <div>
-            <div className="text-[13px] font-medium text-[var(--color-ink)]">Fill the blanks with AI</div>
+            <div className="text-[13px] font-medium text-[var(--color-ink)]">{aiLabel("Fill the blanks with AI", "Fill the blanks (offline)")}</div>
             <div className="text-[11px] text-[var(--color-ink-faint)]">
               Fills every empty or weak section, coherent with the profile so far. Won't touch what you already set.
             </div>
